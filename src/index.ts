@@ -7,11 +7,12 @@ import { handlePublic, handleStaff } from "./booking/api.server.ts";
 import type { DB, Stmt } from "./booking/core.server.ts";
 import staffPage from "./booking/staff.html";
 import schema from "./schema.sql";
+import { sendBookingEmails, type MailEnv } from "./email.ts";
 
 interface D1 extends DB {
   batch(statements: Stmt[]): Promise<unknown>;
 }
-interface Env {
+interface Env extends MailEnv {
   DB: D1;
   PUBLIC_SITE?: string;
 }
@@ -40,6 +41,21 @@ const STAFF_HEADERS = {
     "font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
 };
 
+// A confirmed online booking also emails the guest (and the restaurant) when email is set up.
+async function book(request: Request, env: Env): Promise<Response> {
+  const raw = await request.clone().text();
+  const res = await handlePublic(request, env.DB);
+  if (res.status !== 200 || !env.RESEND_API_KEY) return res;
+  const body = (await res.clone().json()) as { ok?: boolean; duplicate?: boolean; booking?: { ref: string } };
+  if (!body.ok || body.duplicate || !body.booking) return res;
+  let input: Record<string, unknown> = {};
+  try {
+    input = JSON.parse(raw);
+  } catch {}
+  const emailed = await sendBookingEmails(env, input, body.booking.ref).catch(() => false);
+  return new Response(JSON.stringify({ ...body, emailed }), { status: 200, headers: res.headers });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const path = new URL(request.url).pathname;
@@ -53,6 +69,7 @@ export default {
         console.error("schema", e);
         return Response.json({ ok: false, code: "offline", message: "Bookings are unavailable for a moment. Please call us." }, { status: 503, headers: { "Access-Control-Allow-Origin": "*" } });
       }
+      if (path === "/api/public/book" && request.method === "POST") return book(request, env);
       return path.startsWith("/api/public") ? handlePublic(request, env.DB) : handleStaff(request, env.DB);
     }
     if (path === "/" && env.PUBLIC_SITE) return Response.redirect(env.PUBLIC_SITE, 302);

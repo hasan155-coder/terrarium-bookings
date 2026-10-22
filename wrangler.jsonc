@@ -5,7 +5,13 @@
   "compatibility_date": "2025-09-15",
   "observability": { "enabled": true },
   "rules": [{ "type": "Text", "globs": ["**/*.html", "**/*.sql"], "fallthrough": true }],
-  "vars": { "PUBLIC_SITE": "https://hasan155-coder.github.io/terrarium-bistro-preview/" },
+  "vars": {
+    "PUBLIC_SITE": "https://hasan155-coder.github.io/terrarium-bistro-preview/",
+    "STAFF_URL": "https://terrarium-bookings.terrariumbistro.workers.dev/staff",
+    "MAIL_FROM": "Terrarium Bistro <bookings@terrariumbistro.co.uk>",
+    "RESTAURANT_EMAIL": "info@terrariumbistro.co.uk"
+  },
+  // RESEND_API_KEY is a secret, added in the Cloudflare dashboard (never stored here).
   "d1_databases": [
     { "binding": "DB", "database_name": "terrarium-bookings", "database_id": "1ac206bb-ef8b-480b-aa60-3d2be1ff1b2f" }
   ]
