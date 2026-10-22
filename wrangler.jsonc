@@ -1,0 +1,12 @@
+{
+  // Terrarium Bistro booking server. Cloudflare deploys this automatically from GitHub.
+  "name": "terrarium-bookings",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-15",
+  "observability": { "enabled": true },
+  "rules": [{ "type": "Text", "globs": ["**/*.html", "**/*.sql"], "fallthrough": true }],
+  "vars": { "PUBLIC_SITE": "https://hasan155-coder.github.io/terrarium-bistro-preview/" },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "terrarium-bookings", "database_id": "1ac206bb-ef8b-480b-aa60-3d2be1ff1b2f" }
+  ]
+}
