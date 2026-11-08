@@ -3,18 +3,24 @@
 //   /staff       -> staff tablet dashboard (passcode protected)
 //   /api/public  -> live availability + instant booking, used by the website
 //   /api/staff   -> dashboard data and actions
+//   /cancel      -> a guest's one-tap cancel link from their emails
+// Every hour a scheduled run sends the day-before reminder emails.
 import { handlePublic, handleStaff } from "./booking/api.server.ts";
 import type { DB, Stmt } from "./booking/core.server.ts";
 import staffPage from "./booking/staff.html";
 import schema from "./schema.sql";
-import { sendBookingEmails, type MailEnv } from "./email.ts";
+import { sendBookingEmails } from "./email.ts";
+import { cancelRoute, cancelUrl, sendReminders, type GuestEnv } from "./guest.ts";
 
 interface D1 extends DB {
   batch(statements: Stmt[]): Promise<unknown>;
 }
-interface Env extends MailEnv {
+interface Env extends GuestEnv {
   DB: D1;
   PUBLIC_SITE?: string;
+}
+interface Ctx {
+  waitUntil(p: Promise<unknown>): void;
 }
 
 // Tables are created on first use, so a fresh database needs no manual setup.
@@ -52,7 +58,8 @@ async function book(request: Request, env: Env): Promise<Response> {
   try {
     input = JSON.parse(raw);
   } catch {}
-  const emailed = await sendBookingEmails(env, input, body.booking.ref).catch(() => false);
+  const link = await cancelUrl(env, env.DB, body.booking.ref, input.email).catch(() => "");
+  const emailed = await sendBookingEmails(env, input, body.booking.ref, link).catch(() => false);
   return new Response(JSON.stringify({ ...body, emailed }), { status: 200, headers: res.headers });
 }
 
@@ -72,7 +79,29 @@ export default {
       if (path === "/api/public/book" && request.method === "POST") return book(request, env);
       return path.startsWith("/api/public") ? handlePublic(request, env.DB) : handleStaff(request, env.DB);
     }
+    if (path === "/cancel") {
+      if (!env.DB) return new Response("Bookings are offline. Please call us on 01829 863469.", { status: 503 });
+      try {
+        await ensureSchema(env.DB);
+        return await cancelRoute(request, env, env.DB);
+      } catch (e) {
+        console.error("cancel", e);
+        return new Response("Something went wrong. Please call us on 01829 863469.", { status: 500 });
+      }
+    }
     if (path === "/" && env.PUBLIC_SITE) return Response.redirect(env.PUBLIC_SITE, 302);
     return new Response("Not found", { status: 404 });
+  },
+
+  // Hourly (see "triggers" in wrangler.jsonc): day-before reminder emails.
+  async scheduled(_event: unknown, env: Env, ctx: Ctx): Promise<void> {
+    if (!env.DB) return;
+    ctx.waitUntil(
+      (async () => {
+        await ensureSchema(env.DB);
+        const r = await sendReminders(env, env.DB);
+        if (r.sent || r.failed) console.log("reminders", JSON.stringify(r));
+      })().catch((e) => console.error("reminders", e)),
+    );
   },
 };

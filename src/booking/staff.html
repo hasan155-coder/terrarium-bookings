@@ -207,7 +207,8 @@ select.inp option{background:var(--ink-2)}
 .sheet-h{display:flex;align-items:center;gap:12px;padding:18px 18px 12px 22px;border-bottom:1px solid var(--line-2)}
 .sheet-h h2{font-family:var(--f-d);font-weight:500;font-size:1.75rem;line-height:1.05;flex:1}
 .sheet-h h2 small{display:block;font-family:var(--f-b);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
-.sheet-b{padding:18px 22px 22px;overflow-y:auto;overscroll-behavior:contain;display:grid;gap:14px}
+.sheet-b{padding:18px 22px 22px;overflow-y:auto;overscroll-behavior:contain;display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+.sheet-b>*,.sect>*{min-width:0}
 .sheet-f{padding:14px 22px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--line-2);display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
@@ -313,6 +314,117 @@ select.inp option{background:var(--ink-2)}
   .bk-meta,.bk-notes,.bk-staff{color:#222}
   .print-head{display:block!important;font-family:var(--f-d);font-size:20pt;margin-bottom:8px}
 }
+
+/* ---------------------------------------------------------------- tables, waiting list, reports */
+:root{--blue:#7ea7cf;--blue-bg:rgba(126,167,207,.16);--free:#9fbf7a;--free-bg:rgba(159,191,122,.12);--res:#d98a78;--res-bg:rgba(217,138,120,.15)}
+.bk.is-late{border-color:rgba(217,164,65,.55);background:linear-gradient(135deg,rgba(217,164,65,.12),rgba(217,164,65,.03))}
+.tag--running{background:rgba(217,164,65,.2);border-color:rgba(217,164,65,.6);color:var(--amber)}
+.tag--regular{border-color:var(--line);color:var(--gold-hi);background:rgba(201,166,107,.1)}
+.tag--warn{border-color:rgba(201,120,107,.55);color:#e6a093;background:rgba(201,120,107,.1)}
+.bk-guest{margin-top:6px;font-size:.84rem;color:var(--sage-hi);display:flex;gap:6px;overflow-wrap:anywhere}
+.bk-guest b{font-weight:700;letter-spacing:.04em}
+.tbl.is-clash{border-color:var(--rose);color:#f0b2a6;background:rgba(201,120,107,.16)}
+.tbl.is-small{border-color:var(--amber);color:var(--amber)}
+.viewseg{display:flex;padding:4px;border-radius:999px;background:var(--ink-2);border:1px solid var(--line-2);gap:4px}
+.viewseg button{height:38px;padding:0 16px;border-radius:999px;font-size:.84rem;font-weight:700;color:var(--cream-2)}
+.viewseg button[aria-pressed="true"]{background:var(--gold);color:#1a1610}
+.givebtn{border-color:rgba(217,164,65,.5)!important;color:var(--amber)!important}
+/* floor */
+.floor{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+.floor-bar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 0 12px}
+.floor-bar::-webkit-scrollbar{display:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.78rem;color:var(--cream-2);margin:0 0 14px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.area{margin-bottom:18px}
+.area h3{font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:8px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tt{position:relative;text-align:left;padding:12px 12px 11px;border-radius:16px;border:1px solid var(--line-2);background:var(--free-bg);min-height:118px;display:grid;align-content:start;gap:3px;transition:transform .15s var(--ease),border-color .2s}
+.tt:active{transform:scale(.98)}
+.tt-n{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.tt-n b{font-family:var(--f-d);font-size:2.1rem;font-weight:500;line-height:.95}
+.tt-n small{font-size:.7rem;color:var(--cream-2);font-weight:700;letter-spacing:.06em;white-space:nowrap}
+.tt-s{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;font-weight:800}
+.tt-w{font-size:.86rem;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+.tt-x{font-size:.76rem;color:var(--cream-2)}
+.tt.is-free{border-color:rgba(159,191,122,.35)}.tt.is-free .tt-s{color:var(--free)}
+.tt.is-reserved{background:var(--res-bg);border-color:rgba(217,138,120,.5)}.tt.is-reserved .tt-s{color:var(--res)}
+.tt.is-seated{background:var(--blue-bg);border-color:rgba(126,167,207,.55)}.tt.is-seated .tt-s{color:var(--blue)}
+.tt.is-late{background:rgba(217,164,65,.14);border-color:rgba(217,164,65,.6)}.tt.is-late .tt-s{color:var(--amber)}
+.tt.is-clash::after{content:"Clash";position:absolute;top:10px;right:10px;font-size:.58rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:var(--rose);border-radius:6px;padding:2px 6px}
+.tt-join{position:absolute;left:12px;bottom:-1px;right:12px;height:3px;border-radius:3px 3px 0 0;background:currentColor;opacity:.5}
+/* waiting list */
+.wait{margin-top:14px;border-radius:var(--r);border:1px solid rgba(126,167,207,.35);background:linear-gradient(135deg,rgba(126,167,207,.1),transparent);padding:12px}
+.wait-h{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.wait-h b{font-family:var(--f-d);font-size:1.3rem;font-weight:500}
+.wait-h span{font-size:.8rem;color:var(--cream-2)}
+.wait-h button{margin-left:auto}
+.wrow{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.wrow::-webkit-scrollbar{display:none}
+.wc{flex:none;width:250px;padding:12px;border-radius:14px;background:var(--ink-2);border:1px solid var(--line-2);display:grid;gap:8px}
+.wc-top{display:flex;align-items:center;gap:10px}
+.wc-g{font-family:var(--f-d);font-size:1.8rem;line-height:1;color:var(--blue);min-width:28px}
+.wc-top b{display:block;font-weight:600;overflow-wrap:anywhere}
+.wc-top small{font-size:.78rem;color:var(--cream-2)}
+.wc-t{font-variant-numeric:tabular-nums}
+.wc-t.is-over{color:var(--amber);font-weight:700}
+.wc-a{display:flex;gap:6px;flex-wrap:wrap}
+.wc-a a,.wc-a button{height:38px;padding:0 12px;border-radius:999px;font-size:.8rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-3);color:var(--cream-2);text-decoration:none}
+.wc-a .seat{background:var(--blue);border-color:var(--blue);color:#0f1820}
+.wl{display:grid;gap:8px}
+.wl .wc{width:auto}
+.wl .wc.is-done{opacity:.5}
+/* table picker */
+.tpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.tpick button{height:66px;border-radius:12px;border:1px solid var(--line-3);display:grid;align-content:center;justify-items:center;gap:2px;background:rgba(239,230,212,.03)}
+.tpick button b{font-family:var(--f-d);font-size:1.5rem;font-weight:500;line-height:1}
+.tpick button small{font-size:.68rem;color:var(--mute);font-weight:700}
+.tpick button.is-busy{border-style:dashed;opacity:.55}
+.tpick button.is-busy small{color:var(--res)}
+.tpick button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#1a1610;opacity:1}
+.tpick button[aria-pressed="true"] small{color:#3a2f1e}
+.tsum{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid var(--line-2)}
+.tsum b{font-family:var(--f-d);font-size:1.4rem;font-weight:500}
+.tsum.is-short{border-color:rgba(217,164,65,.5);color:var(--amber)}
+/* history */
+.hist{display:grid;gap:4px}
+.hist div{display:grid;grid-template-columns:110px 54px 1fr auto;gap:10px;font-size:.86rem;padding:8px 10px;border-radius:10px;background:rgba(239,230,212,.03)}
+.hist div span:last-child{color:var(--mute)}
+.hist .st-noshow{color:#e6a093}.hist .st-cancelled{color:var(--mute)}.hist .st-finished,.hist .st-seated{color:var(--sage-hi)}
+/* settings: tables */
+.trows{display:grid;gap:8px}
+.trow{display:grid;grid-template-columns:minmax(0,1fr) 84px minmax(0,1.4fr) 70px 40px;gap:6px;align-items:center}
+.trow .inp{height:44px;font-size:.95rem;padding:0 10px}
+.trow button{height:40px;border-radius:10px;color:var(--mute)}
+.thead{display:grid;grid-template-columns:minmax(0,1fr) 84px minmax(0,1.4fr) 70px 40px;gap:6px;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700}
+/* reports */
+.rtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.rtile{padding:12px;border-radius:14px;background:rgba(239,230,212,.03);border:1px solid var(--line-2);display:grid;gap:2px}
+.rtile small{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--mute);font-weight:700}
+.rtile b{font-family:var(--f-d);font-size:1.9rem;font-weight:500;line-height:1;font-variant-numeric:lining-nums tabular-nums}
+.rtile i{font-style:normal;font-size:.74rem;color:var(--cream-2)}
+.rchart{display:flex;align-items:flex-end;gap:2px;height:140px;padding-top:18px;border-bottom:1px solid var(--line-3);overflow-x:auto}
+.rbar{flex:1 0 6px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%;min-width:6px;position:relative}
+.rbar i{display:block;width:100%;max-width:34px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--gold-hi),var(--gold-lo));min-height:1px}
+.rbar.is-today i{background:linear-gradient(180deg,#fff2c9,var(--gold))}
+.rbar.is-zero i{background:var(--ink-4)}
+.rbar em{font-style:normal;font-size:.62rem;color:var(--cream-2);font-variant-numeric:tabular-nums;position:absolute;top:-16px;white-space:nowrap}
+.rlab{display:flex;gap:2px;font-size:.62rem;color:var(--mute);font-weight:700}
+.rlab span{flex:1 0 6px;text-align:left;min-width:6px;overflow:visible;white-space:nowrap;width:0}
+.hbars{display:grid;gap:8px}
+.hbar{display:grid;grid-template-columns:90px 1fr 70px;gap:10px;align-items:center;font-size:.86rem}
+.hbar span:last-child{text-align:right;color:var(--cream-2);font-variant-numeric:tabular-nums}
+.hbar i{display:block;height:12px;border-radius:6px;background:var(--ink-4);position:relative;overflow:hidden}
+.hbar i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--c,var(--gold));border-radius:6px}
+@media (max-width:760px){
+  .fab .btn .fab-t{display:none}.fab .btn--line{padding:0 16px}
+  .tgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rtiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .trow,.thead{grid-template-columns:minmax(0,.7fr) 56px minmax(0,1.3fr) 50px 32px}
+  .hist div{grid-template-columns:90px 44px 1fr}.hist div span:last-child{display:none}
+  .viewseg button{padding:0 12px}
+}
+@media print{.wait,.viewseg,.floor,#giveBtn{display:none!important}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -333,6 +445,10 @@ select.inp option{background:var(--ink-2)}
   <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4.5" r="1.8"/><path d="M10 21l2-6 3 3v3M8 12l2-4h4l2 4 2 1M12 15l1-5"/></symbol>
   <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7"/></symbol>
   <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-sms" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14z"/><path d="M5 19l7-7"/></symbol>
 </svg>
 
 <!-- ======================================================= sign in -->
@@ -372,6 +488,7 @@ select.inp option{background:var(--ink-2)}
     </nav>
     <div class="tools">
       <button class="ib" id="searchBtn" aria-label="Find a booking"><svg class="i"><use href="#i-search"/></svg></button>
+      <button class="ib" id="repBtn" aria-label="Reports"><svg class="i"><use href="#i-chart"/></svg></button>
       <button class="ib" id="bellBtn" aria-label="New online bookings"><svg class="i"><use href="#i-bell"/></svg><span class="badge" id="badge" hidden></span></button>
       <button class="ib" id="setBtn" aria-label="Settings"><svg class="i"><use href="#i-gear"/></svg></button>
     </div>
@@ -382,14 +499,19 @@ select.inp option{background:var(--ink-2)}
     <button class="note-bar" id="noteBar" hidden></button>
     <section class="stats" id="stats" aria-label="Day summary"></section>
     <section class="rail" id="rail" aria-label="Covers by time"></section>
+    <section class="wait" id="wait" aria-label="Waiting list" hidden></section>
     <div class="listbar">
+      <div class="viewseg" id="viewSeg" role="group" aria-label="View"><button data-v="list" aria-pressed="true">Bookings</button><button data-v="floor" aria-pressed="false">Tables</button></div>
       <div class="tabs" id="tabs" role="group" aria-label="Filter bookings"></div>
+      <button class="btn btn--line btn--sm givebtn" id="giveBtn" hidden></button>
       <button class="btn btn--ghost btn--sm" id="printBtn" style="margin-left:auto"><svg class="i"><use href="#i-print"/></svg>Print day</button>
     </div>
     <main class="list" id="list"></main>
+    <main class="floor" id="floor" hidden></main>
   </div>
   <div class="fab">
-    <button class="btn btn--line" id="walkBtn"><svg class="i"><use href="#i-walk"/></svg>Walk-in</button>
+    <button class="btn btn--line" id="waitBtn" aria-label="Waiting list"><svg class="i"><use href="#i-clock"/></svg><span class="fab-t">Waiting list</span></button>
+    <button class="btn btn--line" id="walkBtn" aria-label="Walk-in"><svg class="i"><use href="#i-walk"/></svg><span class="fab-t">Walk-in</span></button>
     <button class="btn btn--gold" id="newBtn"><svg class="i"><use href="#i-plus"/></svg>New booking</button>
   </div>
 </div>
@@ -421,13 +543,14 @@ const toMins = t => +t.slice(0, 2) * 60 + +t.slice(3, 5);
 const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
 const ago = iso => { const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000); return s < 60 ? 'just now' : s < 3600 ? `${Math.floor(s / 60)} min ago` : s < 86400 ? `${Math.floor(s / 3600)} h ago` : fmt(iso.slice(0, 10), { day: 'numeric', month: 'short' }); };
 const OCCASIONS = ['None', 'Birthday', 'Anniversary', 'Date night', 'Celebration', 'Business'];
-const STATUS_LABEL = { booked: 'Booked', seated: 'Seated', finished: 'Finished', cancelled: 'Cancelled', noshow: 'No-show' };
+const STATUS_LABEL = { booked: 'Booked', late: 'Running late', seated: 'Seated', finished: 'Finished', cancelled: 'Cancelled', noshow: 'No-show' };
+const HOLD = ['booked', 'late', 'seated'];
 const SOURCE_LABEL = { online: 'Online', phone: 'Phone', walkin: 'Walk-in' };
 
 /* =================================================================== state */
 const S = {
   date: londonNow().date, day: null, range: [], filter: 'all', maxId: 0, stamp: '', unseen: 0, started: false,
-  prefs: Object.assign({ sound: true, awake: true }, store.get('prefs', {}))
+  prefs: Object.assign({ sound: true, awake: true, view: 'list' }, store.get('prefs', {})), floorAt: 'now'
 };
 
 /* =================================================================== api */
@@ -514,7 +637,7 @@ async function loadStrip() {
 function go(date) { S.date = date; S.day = null; renderTop(); renderStrip(); loadDay(); loadStrip(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
 /* =================================================================== render */
-function render() { renderTop(); renderStrip(); renderStats(); renderRail(); renderTabs(); renderList(); }
+function render() { renderTop(); renderStrip(); renderStats(); renderRail(); renderWait(); renderTabs(); renderView(); }
 
 function renderTop() {
   const today = londonNow().date;
@@ -565,14 +688,14 @@ function renderRail() {
     <div class="rail-scroll" id="railScroll">${groups.map(g => `<div class="svc"><div class="svc-h">${esc(g.name)}</div><div class="svc-cols">${g.slots.map(col).join('')}</div></div>`).join('')}</div>`;
   const n = $('#rail .is-now'); if (n) { const sc = $('#railScroll'); sc.scrollLeft = Math.max(0, n.offsetLeft - 80); }
 }
-const FILTERS = [['all', 'All', b => ['booked', 'seated', 'finished'].includes(b.status)], ['booked', 'Waiting', b => b.status === 'booked'], ['seated', 'Seated', b => b.status === 'seated'], ['finished', 'Finished', b => b.status === 'finished'], ['gone', 'Cancelled & no-show', b => ['cancelled', 'noshow'].includes(b.status)]];
+const FILTERS = [['all', 'All', b => ['booked', 'late', 'seated', 'finished'].includes(b.status)], ['booked', 'Expected', b => b.status === 'booked' || b.status === 'late'], ['seated', 'Seated', b => b.status === 'seated'], ['finished', 'Finished', b => b.status === 'finished'], ['gone', 'Cancelled & no-show', b => ['cancelled', 'noshow'].includes(b.status)]];
 function renderTabs() {
   const bs = S.day ? S.day.bookings : [];
   $('#tabs').innerHTML = FILTERS.map(([k, label, fn]) => `<button data-f="${k}" aria-pressed="${S.filter === k}">${label} <i>${bs.filter(fn).length}</i></button>`).join('');
 }
 function lateBy(b) {
   const now = londonNow();
-  if (b.status !== 'booked' || b.date !== now.date) return 0;
+  if ((b.status !== 'booked' && b.status !== 'late') || b.date !== now.date) return 0;
   const m = now.mins - b.mins; return m >= 15 ? m : 0;
 }
 function card(b) {
@@ -580,14 +703,19 @@ function card(b) {
   const name = [b.first, b.last].filter(Boolean).join(' ') || 'Guest';
   const tags = [];
   if (b.source !== 'phone') tags.push(`<span class="tag tag--${b.source}">${SOURCE_LABEL[b.source] || esc(b.source)}</span>`);
-  if (late) tags.push(`<span class="tag tag--late">Late ${late} min</span>`);
+  if (b.status === 'late') tags.push(`<span class="tag tag--running">Running late${late ? ` · ${late} min` : ''}</span>`);
+  else if (late) tags.push(`<span class="tag tag--late">Late ${late} min</span>`);
+  if (b.clash) tags.push(`<span class="tag tag--warn">Table clash</span>`);
+  const g = b.guest;
+  if (g && g.visits) tags.push(`<span class="tag tag--regular">${ordinal(g.visits + 1)} visit</span>`);
+  if (g && g.noshows) tags.push(`<span class="tag tag--warn">${plural(g.noshows, 'no-show', 'no-shows')} before</span>`);
   if (b.status === 'cancelled' || b.status === 'noshow') tags.push(`<span class="tag tag--state">${STATUS_LABEL[b.status]}</span>`);
   if (b.status === 'finished') tags.push(`<span class="tag">Finished</span>`);
   const meta = [];
   if (b.phone) meta.push(`<a href="tel:${esc(b.phone.replace(/[^\d+]/g, ''))}">${icon('phone')}${esc(b.phone)}</a>`);
   if (b.occasion && b.occasion !== 'None') meta.push(`<span style="display:inline-flex;gap:5px;align-items:center">${icon('cake')}${esc(b.occasion)}</span>`);
   meta.push(`<span>${esc(b.ref)}</span>`);
-  const primary = b.status === 'booked' ? `<button class="go go--seat" data-act="seated">Seat</button>`
+  const primary = b.status === 'booked' || b.status === 'late' ? `<button class="go go--seat" data-act="seated">Seat</button>`
     : b.status === 'seated' ? `<button class="go go--finish" data-act="finished">Finish</button>`
     : `<button class="go go--undo" data-act="${b.status === 'finished' ? 'seated' : 'booked'}">${b.status === 'finished' ? 'Reopen' : 'Restore'}</button>`;
   return `<article class="bk is-${b.status}" data-id="${b.id}">
@@ -595,8 +723,9 @@ function card(b) {
     <div class="bk-main"><div class="bk-top"><h3>${esc(name)}</h3>${tags.join('')}</div>
       <div class="bk-meta">${meta.join('')}</div>
       ${b.notes ? `<p class="bk-notes">${icon('note')}<span>${esc(b.notes)}</span></p>` : ''}
+      ${g && g.note ? `<p class="bk-guest">${icon('leaf')}<span><b>Guest note:</b> ${esc(g.note)}</span></p>` : ''}
       ${b.staff_note ? `<p class="bk-staff">${esc(b.staff_note)}</p>` : ''}</div>
-    <div class="bk-act"><button class="tbl${b.table_no ? ' has' : ''}" data-act="table" aria-label="Table number">${b.table_no ? 'T' + esc(b.table_no) : 'Table'}</button><div class="bk-btns"><button class="more" data-act="open" aria-label="More for ${esc(name)}">${icon('more')}</button>${primary}</div></div>
+    <div class="bk-act"><button class="tbl${b.table_no ? ' has' : ''}${b.clash ? ' is-clash' : b.tableSeats && b.tableSeats < b.guests ? ' is-small' : ''}" data-act="table" aria-label="Table">${b.table_no ? 'T' + esc(b.table_no) : 'Table'}</button><div class="bk-btns"><button class="more" data-act="open" aria-label="More for ${esc(name)}">${icon('more')}</button>${primary}</div></div>
   </article>`;
 }
 function renderList() {
@@ -686,23 +815,70 @@ function openBooking(b) {
     ['Phone', b.phone ? `<a href="tel:${esc(b.phone.replace(/[^\d+]/g, ''))}">${esc(b.phone)}</a>` : '—', true], ['Email', b.email ? `<a href="mailto:${esc(b.email)}">${esc(b.email)}</a>` : '—', true],
     ['Occasion', b.occasion && b.occasion !== 'None' ? b.occasion : '—'], ['Guest notes', b.notes || '—'], ['Staff note', b.staff_note || '—'], ['Booked', `${SOURCE_LABEL[b.source] || b.source} · ${ago(b.created_at)}`], ['Newsletter', b.newsletter ? 'Yes, opted in' : 'No'], ['Reference', b.ref]];
   const acts = [];
-  if (b.status === 'booked') acts.push(['seated', 'Seat now', 'btn--gold'], ['noshow', 'No-show', 'btn--line'], ['cancelled', 'Cancel booking', 'btn--danger']);
+  if (b.status === 'booked') acts.push(['seated', 'Seat now', 'btn--gold'], ['late', 'Running late', 'btn--line'], ['noshow', 'No-show', 'btn--line'], ['cancelled', 'Cancel booking', 'btn--danger']);
+  if (b.status === 'late') acts.push(['seated', 'Seat now', 'btn--gold'], ['booked', 'Back on time', 'btn--line'], ['noshow', 'No-show', 'btn--line'], ['cancelled', 'Cancel booking', 'btn--danger']);
   if (b.status === 'seated') acts.push(['finished', 'Finish table', 'btn--sage'], ['booked', 'Undo seating', 'btn--line']);
   if (b.status === 'finished') acts.push(['seated', 'Reopen table', 'btn--line']);
   if (b.status === 'cancelled' || b.status === 'noshow') acts.push(['booked', 'Restore booking', 'btn--gold']);
   const sh = openSheet({
     kicker: `${b.time} · ${plural(b.guests, 'guest', 'guests')}`, title: esc(name),
     body: `<dl class="kv">${rows.map(([k, v, raw]) => `<dt>${k}</dt><dd>${raw ? v : esc(v)}</dd>`).join('')}</dl>
-      <div class="acts">${acts.map(([s, l, c]) => `<button class="btn ${c}" data-status="${s}">${l}</button>`).join('')}<button class="btn btn--line" id="tblBtn">Set table</button></div>`,
+      <div class="acts">${acts.map(([s, l, c]) => `<button class="btn ${c}" data-status="${s}">${l}</button>`).join('')}<button class="btn btn--line" id="tblBtn">${b.table_no ? 'Change table' : 'Set table'}</button></div>
+      <div class="sect" id="guestSect"><h3>Guest history</h3><p class="hint">Loading…</p></div>`,
     foot: `<button class="btn btn--line" id="editBtn">Edit details</button>`
   });
+  loadGuest(b, sh);
   $$('[data-status]', sh).forEach(x => x.addEventListener('click', async () => { closeSheet(); await update(b.id, { status: x.dataset.status }); }));
   $('#tblBtn', sh).addEventListener('click', () => openTable(b));
   $('#editBtn', sh).addEventListener('click', () => openForm(b));
 }
 
-/* ---------- table keypad */
+/* ---------- table picker */
+const splitT = v => String(v || '').split('+').map(s => s.trim()).filter(Boolean);
+const tablesCfg = () => (S.day && S.day.settings.tables) || [];
+const durOf = b => (b && b.duration) || (S.day ? S.day.settings.duration : 90);
+/** Who holds each table during [start, start + dur), ignoring booking `skip`. */
+function holders(start, dur, skip) {
+  const m = new Map();
+  for (const x of (S.day ? S.day.bookings : [])) {
+    if (x.id === skip || !HOLD.includes(x.status) || !x.table_no) continue;
+    if (x.mins < start + dur && x.mins + x.duration > start) for (const t of splitT(x.table_no)) m.set(t.toLowerCase(), x);
+  }
+  return m;
+}
 function openTable(b) {
+  const tables = tablesCfg();
+  if (!tables.length) return openKeypad(b);
+  let pick = new Set(splitT(b.table_no).map(t => t.toLowerCase()));
+  const busy = holders(b.mins, durOf(b), b.id);
+  const who = x => [x.first, x.last].filter(Boolean).join(' ') || 'Guest';
+  const sh = openSheet({
+    kicker: `${esc([b.first, b.last].filter(Boolean).join(' ') || 'Guest')} · ${plural(b.guests, 'guest', 'guests')} · ${b.time}`, title: 'Choose a table',
+    body: `<div class="tpick" id="tp">${tables.map(t => { const o = busy.get(t.name.toLowerCase()); return `<button type="button" data-t="${esc(t.name)}" class="${o ? 'is-busy' : ''}" aria-pressed="${pick.has(t.name.toLowerCase())}"><b>${esc(t.name)}</b><small>${o ? esc(o.time + ' ' + who(o)) : plural(t.seats, 'seat', 'seats')}</small></button>`; }).join('')}</div>
+      <div class="tsum" id="tsum"></div><p class="hint">Tap more than one table to push them together. Tables in use at ${b.time} show who has them.</p>`,
+    foot: `<button class="btn btn--ghost" id="tpClear">Clear</button><button class="btn btn--line" id="tpAuto">Pick for me</button><button class="btn btn--gold" id="tpSave">Save table</button>${b.status === 'booked' || b.status === 'late' ? '<button class="btn btn--line" id="tpSeat">Save &amp; seat</button>' : ''}`
+  });
+  const sum = () => {
+    const chosen = tables.filter(t => pick.has(t.name.toLowerCase())), seats = chosen.reduce((n, t) => n + t.seats, 0);
+    const clash = chosen.filter(t => busy.has(t.name.toLowerCase()));
+    const el = $('#tsum', sh); el.className = 'tsum' + (chosen.length && (seats < b.guests || clash.length) ? ' is-short' : '');
+    el.innerHTML = chosen.length ? `<span>${chosen.map(t => 'T' + esc(t.name)).join(' + ')}${clash.length ? ` · already in use at ${b.time}` : seats < b.guests ? ' · not enough seats' : ''}</span><b>${seats} / ${b.guests}</b>` : '<span>No table chosen</span><b>–</b>';
+  };
+  sum();
+  $('#tp', sh).addEventListener('click', e => { const t = e.target.closest('[data-t]'); if (!t) return; const k = t.dataset.t.toLowerCase(); pick.has(k) ? pick.delete(k) : pick.add(k); t.setAttribute('aria-pressed', String(pick.has(k))); sum(); });
+  const value = () => tables.filter(t => pick.has(t.name.toLowerCase())).map(t => t.name).join('+');
+  const save = async extra => { closeSheet(); await update(b.id, { table_no: value(), ...extra }, !extra); };
+  $('#tpClear', sh).addEventListener('click', () => { pick = new Set(); $$('#tp [data-t]', sh).forEach(x => x.setAttribute('aria-pressed', 'false')); sum(); });
+  $('#tpAuto', sh).addEventListener('click', async () => {
+    closeSheet();
+    const r = await api('update', { id: b.id, table_no: 'auto' }).catch(() => null);
+    await loadDay(true);
+    toast(r && r.table ? `Table ${r.table}` : 'No table free', r && r.table ? `Given to ${esc([b.first, b.last].filter(Boolean).join(' ') || 'the guest')}` : 'Every table that fits is in use then. Choose one by hand.', 3500);
+  });
+  $('#tpSave', sh).addEventListener('click', () => save());
+  const seat = $('#tpSeat', sh); if (seat) seat.addEventListener('click', () => save({ status: 'seated' }));
+}
+function openKeypad(b) {
   let v = b.table_no || '';
   const sh = openSheet({
     kicker: `${[b.first, b.last].filter(Boolean).join(' ') || 'Guest'} · ${plural(b.guests, 'guest', 'guests')}`, title: 'Table number',
@@ -722,14 +898,14 @@ function openTable(b) {
 }
 
 /* ---------- new / edit form */
-function openForm(b, kind) {
+function openForm(b, kind, preset = {}) {
   const isNew = !b; const s = S.day ? S.day.settings : null;
   const src = isNew ? kind : b.source;
   const now = londonNow();
   let date = isNew ? S.date : b.date;
   let time = isNew ? (src === 'walkin' ? `${String(Math.floor(now.mins / 60)).padStart(2, '0')}:${String(Math.floor(now.mins % 60 / 15) * 15).padStart(2, '0')}` : '') : b.time;
   if (isNew && src === 'walkin') date = now.date;
-  let guests = isNew ? 2 : b.guests;
+  let guests = isNew ? (preset.guests || 2) : b.guests;
   const times = s ? s.services.flatMap(x => x.times) : [];
   const slotOf = t => S.day && S.day.date === date ? S.day.slots.find(x => x.time === t) : null;
   const timeChips = () => {
@@ -751,7 +927,7 @@ function openForm(b, kind) {
       <div class="field"><span class="lbl">Occasion</span><div class="chips" id="fOcc">${OCCASIONS.map(o => `<button type="button" class="chip" data-o="${o}" aria-pressed="${(isNew ? 'None' : b.occasion || 'None') === o}">${o}</button>`).join('')}</div></div>
       <div class="field"><span class="lbl">Guest notes</span><textarea class="inp" id="fNotes" placeholder="Allergies, high chair, pram…">${esc(isNew ? '' : b.notes)}</textarea></div>
       <div class="row2"><div class="field"><span class="lbl">Staff note</span><input class="inp" id="fStaff" value="${esc(isNew ? '' : b.staff_note)}" placeholder="Only staff see this"></div>
-        <div class="field"><span class="lbl">Table</span><input class="inp" id="fTable" inputmode="numeric" value="${esc(isNew ? '' : b.table_no)}"></div></div>
+        <div class="field"><span class="lbl">Table</span><input class="inp" id="fTable" value="${esc(isNew ? preset.table_no || '' : b.table_no)}" placeholder="${isNew && tablesCfg().length ? 'Blank = pick for me' : ''}"></div></div>
       <p class="err" id="fErr" role="alert"></p></form>`,
     foot: `<button class="btn btn--ghost" data-close>Cancel</button><button class="btn btn--gold" id="fSave">${isNew ? (src === 'walkin' ? 'Seat walk-in' : 'Save booking') : 'Save changes'}</button>`
   });
@@ -791,7 +967,7 @@ function openForm(b, kind) {
     closeSheet();
     const d = $('#fDate', sh)?.value || date;
     if (d !== S.date) go(d); else { await loadDay(true); loadStrip(); }
-    toast(isNew ? (src === 'walkin' ? 'Walk-in seated' : 'Booking saved') : 'Changes saved', isNew && r.ref ? `Reference ${r.ref}` : '', 3000);
+    toast(isNew ? (src === 'walkin' ? 'Walk-in seated' : 'Booking saved') : 'Changes saved', isNew && r.ref ? `Reference ${r.ref}${r.table ? ` · Table ${esc(r.table)}` : tablesCfg().length ? ' · no table free, choose one' : ''}` : '', 3500);
     if (r.id) flash(r.id);
   }
   if (isNew) setTimeout(() => $('#fFirst', sh).focus({ preventScroll: true }), 350);
@@ -913,6 +1089,10 @@ async function openSettings() {
         <div class="row2 keep">${num('sCovers', 'Covers per time slot', s.slotCovers, 'Most guests who can start at one time online.')}${num('sCap', 'Seats in the restaurant', s.capacity, 'Online bookings stop when this would be exceeded.', 1, 1000)}</div>
         <div class="row2 keep">${num('sDur', 'Table time (minutes)', s.duration, 'How long a table is held, for the seat count.', 15, 360)}${num('sMax', 'Largest party online', s.maxOnline, 'Bigger groups are asked to call.', 1, 50)}</div>
         <div class="row2 keep">${num('sAhead', 'Book up to (days ahead)', s.daysAhead, 'Furthest date guests can pick.', 1, 730)}${num('sNotice', 'Same-day notice (minutes)', s.minNotice, 'How close to a time guests can still book.', 0, 2880)}</div></div>
+      <div class="sect"><h3>Reminders</h3><label class="switch"><span><b>Email a reminder the day before</b><span>Sent at 10am to guests booked for the next day, with a link to cancel if they can no longer come.</span></span><input type="checkbox" id="sRemind" ${s.reminders ? 'checked' : ''}></label></div>
+      <div class="sect"><h3>Tables</h3><div class="thead"><span>Table</span><span>Seats</span><span>Area</span><span>Join</span><span></span></div><div class="trows" id="sTables">${(s.tables || []).map(tableRow).join('')}</div>
+        <button type="button" class="btn btn--line btn--sm" id="sAddTable" style="justify-self:start">${icon('plus')}Add a table</button>
+        <span class="hint">New bookings get the smallest free table that fits. Tables with the same join letter can be pushed together for bigger groups; leave it blank for tables that can't move. Clear every row to stop giving tables automatically.</span></div>
       <div class="sect"><h3>Closed every week</h3><div class="wk" id="sWk">${idx.map((d, i) => `<button type="button" data-d="${d}" aria-pressed="${s.closedWeekdays.includes(d)}">${days[i]}</button>`).join('')}</div><span class="hint">Highlighted days are closed to online bookings. Use the day panel to open one specific date.</span></div>
       <div class="sect"><h3>Booking times</h3><div id="sSvc" style="display:grid;gap:10px">${s.services.map(x => `<div class="row2" data-svc><input class="inp" value="${esc(x.name)}" aria-label="Service name"><input class="inp" value="${esc(x.times.join(', '))}" aria-label="Times"></div>`).join('')}</div>
         <button type="button" class="btn btn--line btn--sm" id="sAddSvc" style="justify-self:start">${icon('plus')}Add a service</button><span class="hint">Times guests can pick, separated by commas, e.g. 12:00, 12:30, 13:00. Clear a row to remove it.</span></div>
@@ -929,6 +1109,8 @@ async function openSettings() {
   });
   $$('[data-step]', sh).forEach(x => x.addEventListener('click', () => { const i = $('#' + x.dataset.for, sh); i.value = Math.max(+i.dataset.min, Math.min(+i.dataset.max, (+i.value || 0) + +x.dataset.step)); }));
   $('#sWk', sh).addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (b) b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); });
+  $('#sAddTable', sh).addEventListener('click', () => { $('#sTables', sh).insertAdjacentHTML('beforeend', tableRow({ name: '', seats: 2, area: '', join: '' })); $('#sTables .trow:last-child input', sh).focus(); });
+  $('#sTables', sh).addEventListener('click', e => { const x = e.target.closest('[data-rm]'); if (x) x.closest('.trow').remove(); });
   $('#sAddSvc', sh).addEventListener('click', () => $('#sSvc', sh).insertAdjacentHTML('beforeend', '<div class="row2" data-svc><input class="inp" placeholder="Name, e.g. Afternoon tea" aria-label="Service name"><input class="inp" placeholder="15:00, 15:30" aria-label="Times"></div>'));
   $('#pSound', sh).addEventListener('change', e => { S.prefs.sound = e.target.checked; store.set('prefs', S.prefs); });
   $('#pAwake', sh).addEventListener('change', e => { S.prefs.awake = e.target.checked; store.set('prefs', S.prefs); e.target.checked ? wake() : sleepOk(); });
@@ -948,13 +1130,221 @@ async function openSettings() {
     const settings = {
       online: $('#sOnline', sh).checked, slotCovers: +$('#sCovers', sh).value, capacity: +$('#sCap', sh).value, duration: +$('#sDur', sh).value,
       maxOnline: +$('#sMax', sh).value, daysAhead: +$('#sAhead', sh).value, minNotice: +$('#sNotice', sh).value,
-      closedWeekdays: $$('#sWk [aria-pressed="true"]', sh).map(b => +b.dataset.d), services
+      closedWeekdays: $$('#sWk [aria-pressed="true"]', sh).map(b => +b.dataset.d), services,
+      reminders: $('#sRemind', sh).checked,
+      tables: $$('#sTables .trow', sh).map(r => { const [n, st, a, j] = $$('input', r); return { name: n.value.trim(), seats: +st.value || 0, area: a.value.trim(), join: j.value.trim() }; }).filter(t => t.name && t.seats > 0)
     };
     const r = await api('settings', { settings }).catch(() => null);
     if (r && r.ok) { closeSheet(); toast('Settings saved', 'The website uses them straight away.', 3000); await loadDay(true); loadStrip(); }
     else err.textContent = 'Could not save settings.';
   });
 }
+
+
+/* =================================================================== tables, waiting list, guests, reports */
+const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+const fmtT = m => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+function tableRow(t) {
+  return `<div class="trow"><input class="inp" value="${esc(t.name)}" aria-label="Table name" placeholder="e.g. 12"><input class="inp" inputmode="numeric" value="${t.seats}" aria-label="Seats"><input class="inp" value="${esc(t.area)}" aria-label="Area" placeholder="Window"><input class="inp" value="${esc(t.join)}" aria-label="Join group" maxlength="4" placeholder="A"><button type="button" data-rm aria-label="Remove table">${icon('x')}</button></div>`;
+}
+
+/* ---------- list or tables */
+function renderView() {
+  const floor = S.prefs.view === 'floor';
+  $$('#viewSeg [data-v]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.v === S.prefs.view)));
+  $('#tabs').hidden = floor; $('#list').hidden = floor; $('#floor').hidden = !floor;
+  const t = S.day ? S.day.totals : null, give = $('#giveBtn');
+  give.hidden = !(t && t.untabled);
+  if (t && t.untabled) give.textContent = `Give tables (${t.untabled})`;
+  floor ? renderFloor() : renderList();
+}
+$('#viewSeg').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (!b) return; S.prefs.view = b.dataset.v; store.set('prefs', S.prefs); renderView(); });
+$('#giveBtn').addEventListener('click', async () => {
+  const r = await api('assign-day', { date: S.date }).catch(() => null);
+  await loadDay(true);
+  if (r && r.ok) toast(r.given ? `${plural(r.given, 'table', 'tables')} given` : 'No tables free', r.left ? `${plural(r.left, 'booking', 'bookings')} still need a table: every table that fits is in use then.` : '', 4000);
+  else if (r) toast('Tables not given', r.message || '');
+});
+
+function floorTimes() {
+  const d = S.day, isToday = d.date === londonNow().date;
+  const times = [...new Set(d.settings.services.flatMap(s => s.times))].sort();
+  return (isToday ? [['now', 'Now']] : []).concat(times.map(t => [t, t]));
+}
+function renderFloor() {
+  const d = S.day; if (!d) return;
+  const tables = tablesCfg();
+  if (!tables.length) { $('#floor').innerHTML = `<div class="empty"><b>No tables yet</b>Add your tables in Settings and new bookings will get one automatically.<div style="margin-top:16px"><button class="btn btn--gold" id="floorSet">Open Settings</button></div></div>`; $('#floorSet').addEventListener('click', openSettings); return; }
+  const now = londonNow(), isToday = d.date === now.date;
+  const opts = floorTimes();
+  if (!opts.some(o => o[0] === S.floorAt)) S.floorAt = opts[0] ? opts[0][0] : 'now';
+  const T = S.floorAt === 'now' ? now.mins : toMins(S.floorAt);
+  const live = d.bookings.filter(b => HOLD.includes(b.status) && b.table_no);
+  const at = name => live.filter(b => splitT(b.table_no).some(t => t.toLowerCase() === name.toLowerCase()));
+  const tile = t => {
+    const mine = at(t.name);
+    const occ = mine.find(b => b.status === 'seated' && (S.floorAt === 'now' ? b.mins <= T + 30 : b.mins <= T && b.mins + b.duration > T))
+      || mine.find(b => b.status !== 'seated' && b.mins <= T && b.mins + b.duration > T);
+    const next = mine.filter(b => b.status !== 'seated' && b.mins > T).sort((a, b) => a.mins - b.mins)[0];
+    const st = !occ ? 'free' : occ.status === 'seated' ? 'seated' : occ.status === 'late' || lateBy(occ) ? 'late' : 'reserved';
+    const label = { free: 'Free', seated: 'Seated', late: 'Running late', reserved: 'Reserved' }[st];
+    const nm = b => esc([b.first, b.last].filter(Boolean).join(' ') || 'Guest');
+    const joined = occ && splitT(occ.table_no).length > 1;
+    return `<button class="tt is-${st}${occ && occ.clash ? ' is-clash' : ''}" data-table="${esc(t.name)}" aria-label="Table ${esc(t.name)}: ${label}">
+      <span class="tt-n"><b>${esc(t.name)}</b><small>${plural(t.seats, 'seat', 'seats')}</small></span>
+      <span class="tt-s">${label}</span>
+      ${occ ? `<span class="tt-w">${nm(occ)} · ${occ.guests}</span><span class="tt-x">${occ.time}–${fmtT(occ.mins + occ.duration)}${joined ? ` · with ${esc(splitT(occ.table_no).filter(x => x.toLowerCase() !== t.name.toLowerCase()).map(x => 'T' + x).join(', '))}` : ''}</span>`
+        : next ? `<span class="tt-x">Next: ${next.time} · ${nm(next)} (${next.guests})</span>` : `<span class="tt-x">${isToday && S.floorAt === 'now' ? 'Nothing booked later' : 'Nothing booked after this'}</span>`}
+      ${joined ? '<i class="tt-join" aria-hidden="true"></i>' : ''}</button>`;
+  };
+  const areas = []; for (const t of tables) { let a = areas.find(x => x.name === (t.area || 'Tables')); if (!a) areas.push(a = { name: t.area || 'Tables', tables: [] }); a.tables.push(t); }
+  const counts = { free: 0 }; // summary for the bar
+  $('#floor').innerHTML = `<div class="floor-bar">${opts.map(([k, l]) => `<button class="chip" data-at="${k}" aria-pressed="${k === S.floorAt}">${l}</button>`).join('')}</div>
+    <div class="legend"><span><i style="background:var(--free)"></i>Free</span><span><i style="background:var(--res)"></i>Reserved</span><span><i style="background:var(--amber)"></i>Running late</span><span><i style="background:var(--blue)"></i>Seated</span></div>
+    ${areas.map(a => `<section class="area"><h3>${esc(a.name)}</h3><div class="tgrid">${a.tables.map(tile).join('')}</div></section>`).join('')}`;
+  void counts;
+}
+$('#floor').addEventListener('click', e => {
+  const c = e.target.closest('[data-at]'); if (c) { S.floorAt = c.dataset.at; renderFloor(); return; }
+  const t = e.target.closest('[data-table]'); if (t) openTableSheet(t.dataset.table);
+});
+function openTableSheet(name) {
+  const d = S.day, t = tablesCfg().find(x => x.name === name); if (!t) return;
+  const mine = d.bookings.filter(b => splitT(b.table_no).some(x => x.toLowerCase() === name.toLowerCase()) && ['booked', 'late', 'seated', 'finished'].includes(b.status)).sort((a, b) => a.mins - b.mins);
+  const waiting = (d.waitlist || []).filter(w => w.status === 'waiting');
+  const isToday = d.date === londonNow().date;
+  const sh = openSheet({
+    kicker: `${esc(t.area || 'Table')} · ${plural(t.seats, 'seat', 'seats')}${t.join ? ` · joins group ${esc(t.join)}` : ''}`, title: `Table ${esc(name)}`,
+    body: `${mine.length ? `<div class="res">${mine.map(b => resultRow(b)).join('')}</div>` : '<p class="hint">No bookings on this table today.</p>'}
+      ${isToday && waiting.length ? `<div class="sect"><h3>Seat someone waiting</h3><div class="res">${waiting.map(w => `<button data-w="${w.id}"><span class="g">${w.guests}</span><span class="who"><b>${esc(w.name)}</b><span>Waiting ${Math.max(0, Math.round((Date.now() - new Date(w.created_at).getTime()) / 60000))} min</span></span><span></span></button>`).join('')}</div></div>` : ''}`,
+    foot: `<button class="btn btn--ghost" data-close>Close</button>${isToday ? `<button class="btn btn--gold" id="ttWalk">Seat a walk-in here</button>` : ''}`
+  });
+  $$('.res [data-id]', sh).forEach(x => x.addEventListener('click', () => { const b = byId(x.dataset.id); if (b) openBooking(b); }));
+  $$('[data-w]', sh).forEach(x => x.addEventListener('click', () => { closeSheet(); seatWaiting(+x.dataset.w, name); }));
+  const w = $('#ttWalk', sh); if (w) w.addEventListener('click', () => openForm(null, 'walkin', { table_no: name, guests: Math.min(t.seats, 2) }));
+}
+
+/* ---------- waiting list */
+const waitMins = w => Math.max(0, Math.round((Date.now() - new Date(w.created_at).getTime()) / 60000));
+function smsLink(w) {
+  const n = String(w.phone || '').replace(/[^\d+]/g, '');
+  return `sms:${n}?&body=${encodeURIComponent(`Hi ${w.name.split(' ')[0]}, your table at Terrarium Bistro is ready. Please come to the front desk. See you in a moment!`)}`;
+}
+function waitCard(w, full) {
+  const m = waitMins(w), over = w.quote && m > w.quote && w.status === 'waiting';
+  const done = w.status !== 'waiting';
+  return `<div class="wc${done ? ' is-done' : ''}" data-wid="${w.id}">
+    <div class="wc-top"><span class="wc-g">${w.guests}</span><span style="min-width:0"><b>${esc(w.name)}</b><small>${done ? (w.status === 'seated' ? 'Seated' : 'Left') : `<span class="wc-t${over ? ' is-over' : ''}">Waiting ${m} min</span>${w.quote ? ` · told ${w.quote} min` : ''}`}</small></span></div>
+    ${w.notes && full ? `<small class="hint">${esc(w.notes)}</small>` : ''}
+    ${done ? '' : `<div class="wc-a">${w.phone ? `<a href="tel:${esc(w.phone.replace(/[^\d+]/g, ''))}">${icon('phone')}Call</a><a href="${esc(smsLink(w))}">${icon('sms')}Text</a>` : ''}<button data-wact="left">Remove</button><button class="seat" data-wact="seated">Seat</button></div>`}
+  </div>`;
+}
+function renderWait() {
+  const d = S.day, el = $('#wait'); if (!d) return;
+  const waiting = (d.waitlist || []).filter(w => w.status === 'waiting');
+  el.hidden = !waiting.length;
+  if (!waiting.length) { el.innerHTML = ''; return; }
+  const covers = waiting.reduce((n, w) => n + w.guests, 0);
+  el.innerHTML = `<div class="wait-h"><b>Waiting list</b><span>${plural(waiting.length, 'party', 'parties')} · ${plural(covers, 'guest', 'guests')}</span><button class="btn btn--line btn--sm" id="waitAll">Add or manage</button></div><div class="wrow">${waiting.map(w => waitCard(w)).join('')}</div>`;
+}
+async function seatWaiting(id, table) {
+  const r = await api('wait-update', { id, status: 'seated', table_no: table || '' }).catch(() => null);
+  if (!r || !r.ok) { toast('Not seated', (r && r.message) || 'Please try again.'); return; }
+  if (S.date !== londonNow().date) go(londonNow().date); else await loadDay(true);
+  toast('Seated from the waiting list', r.table ? `Table ${esc(r.table)}` : tablesCfg().length ? 'No table free: tap the table button on their booking to choose one.' : '', 4000);
+  if (r.booking_id) flash(r.booking_id);
+}
+async function waitAction(id, act) {
+  if (act === 'seated') return seatWaiting(id);
+  const r = await api('wait-update', { id, status: act }).catch(() => null);
+  if (r && r.ok) { await loadDay(true); toast(act === 'left' ? 'Removed from the waiting list' : 'Back on the waiting list', '', 2500); }
+}
+$('#wait').addEventListener('click', e => {
+  if (e.target.closest('#waitAll')) return openWait();
+  const a = e.target.closest('[data-wact]'); if (!a) return;
+  waitAction(+a.closest('[data-wid]').dataset.wid, a.dataset.wact);
+});
+function openWait() {
+  if (S.date !== londonNow().date) { go(londonNow().date); setTimeout(openWait, 600); return; }
+  const list = (S.day && S.day.waitlist) || [];
+  let guests = 2, quote = 15;
+  const sh = openSheet({
+    kicker: 'Today', title: 'Waiting list',
+    body: `<form id="wf" style="display:grid;gap:12px" novalidate>
+        <div class="row2"><div class="field"><span class="lbl">Name to call</span><input class="inp" id="wName" autocomplete="off"></div>
+          <div class="field"><span class="lbl">Mobile (to text when ready)</span><input class="inp" id="wPhone" type="tel" inputmode="tel" autocomplete="off"></div></div>
+        <div class="row2 keep"><div class="field"><span class="lbl">Guests</span><div class="stepper"><button type="button" data-ws="-1" aria-label="Fewer">−</button><input id="wGuests" inputmode="numeric" value="${guests}" aria-label="Guests"><button type="button" data-ws="1" aria-label="More">+</button></div></div>
+          <div class="field"><span class="lbl">Wait you told them</span><div class="chips" id="wQuote">${[10, 15, 20, 30, 45, 60].map(q => `<button type="button" class="chip" data-q="${q}" aria-pressed="${q === quote}">${q} min</button>`).join('')}</div></div></div>
+        <div class="field"><span class="lbl">Note</span><input class="inp" id="wNotes" placeholder="Happy to sit at the bar, high chair…"></div>
+        <p class="err" id="wErr" role="alert"></p>
+        <button class="btn btn--gold" type="submit">Add to waiting list</button></form>
+      ${list.length ? `<div class="wl" id="wl">${[...list].sort((a, b) => (a.status === 'waiting' ? 0 : 1) - (b.status === 'waiting' ? 0 : 1) || a.id - b.id).map(w => waitCard(w, true)).join('')}</div>` : '<p class="hint">Nobody waiting yet. When the room is full, add walk-ins here and text them when a table is ready.</p>'}`
+  });
+  $$('[data-ws]', sh).forEach(x => x.addEventListener('click', () => { const i = $('#wGuests', sh); i.value = Math.max(1, Math.min(50, (+i.value || 0) + +x.dataset.ws)); }));
+  $('#wQuote', sh).addEventListener('click', e => { const c = e.target.closest('[data-q]'); if (!c) return; quote = +c.dataset.q; $$('[data-q]', sh).forEach(x => x.setAttribute('aria-pressed', String(x === c))); });
+  $('#wf', sh).addEventListener('submit', async e => {
+    e.preventDefault(); const err = $('#wErr', sh); err.textContent = '';
+    const r = await api('wait-add', { name: $('#wName', sh).value.trim(), phone: $('#wPhone', sh).value.trim(), guests: +$('#wGuests', sh).value, quote, notes: $('#wNotes', sh).value.trim() }).catch(() => null);
+    if (!r || !r.ok) { err.textContent = (r && r.message) || 'Not added.'; return; }
+    closeSheet(); await loadDay(true); toast('Added to the waiting list', `${esc($('#wName', sh)?.value || '')}`, 2500);
+  });
+  const wl = $('#wl', sh);
+  if (wl) wl.addEventListener('click', e => { const a = e.target.closest('[data-wact]'); if (!a) return; closeSheet(); waitAction(+a.closest('[data-wid]').dataset.wid, a.dataset.wact); });
+  setTimeout(() => $('#wName', sh).focus({ preventScroll: true }), 350);
+}
+$('#waitBtn').addEventListener('click', openWait);
+
+/* ---------- guest history inside a booking */
+async function loadGuest(b, sh) {
+  const box = $('#guestSect', sh); if (!box) return;
+  const r = await api('guest?id=' + b.id).catch(() => null);
+  if (!box.isConnected) return;
+  if (!r || !r.ok) { box.innerHTML = '<h3>Guest history</h3><p class="hint">Could not load the history.</p>'; return; }
+  const past = r.bookings.filter(x => x.id !== b.id);
+  box.innerHTML = `<h3>Guest history</h3>
+    ${r.canNote ? `<div class="field"><span class="lbl">Guest note (shows on every booking for this guest)</span><textarea class="inp" id="gNote" maxlength="400" placeholder="Nut allergy, likes the window table, regular on Fridays…">${esc(r.note)}</textarea><div><button type="button" class="btn btn--line btn--sm" id="gSave">Save guest note</button></div></div>` : '<p class="hint">Add an email or phone number to this booking to keep notes and history for the guest.</p>'}
+    ${past.length ? `<div class="hist">${past.slice(0, 20).map(x => `<div><span>${fmt(x.date, { day: 'numeric', month: 'short', year: '2-digit' })}</span><span>${x.time}</span><span class="st-${x.status}">${STATUS_LABEL[x.status] || x.status} · ${plural(x.guests, 'guest', 'guests')}</span><span>${x.date > londonNow().date ? 'Coming up' : ''}</span></div>`).join('')}</div>` : '<p class="hint">First booking with us.</p>'}`;
+  const s = $('#gSave', box);
+  if (s) s.addEventListener('click', async () => {
+    const res = await api('guest-note', { id: b.id, note: $('#gNote', box).value.trim() }).catch(() => null);
+    if (res && res.ok) { toast('Guest note saved', 'It will show on their bookings from now on.', 3000); loadDay(true); } else toast('Not saved', (res && res.message) || '');
+  });
+}
+
+/* ---------- reports */
+async function openReport() {
+  const today = londonNow().date;
+  const ranges = [['7', 'Last 7 days', addDays(today, -6), today], ['30', 'Last 30 days', addDays(today, -29), today], ['90', 'Last 90 days', addDays(today, -89), today], ['next', 'Next 14 days', today, addDays(today, 13)]];
+  let pick = store.get('report', '30'); if (!ranges.some(r => r[0] === pick)) pick = '30';
+  const sh = openSheet({ kicker: 'Terrarium Bistro', title: 'Reports', body: `<div class="seg" id="rSeg">${ranges.map(r => `<button data-r="${r[0]}" aria-pressed="${r[0] === pick}">${r[1]}</button>`).join('')}</div><div id="rBody" style="display:grid;gap:14px"><p class="hint">Loading…</p></div>` });
+  async function draw() {
+    const [, , from, to] = ranges.find(r => r[0] === pick);
+    const r = await api(`report?from=${from}&to=${to}`).catch(() => null);
+    const box = $('#rBody', sh); if (!box) return;
+    if (!r || !r.ok) { box.innerHTML = '<p class="hint">Could not load the report.</p>'; return; }
+    const t = r.totals, max = Math.max(1, ...r.daily.map(d => d.covers)), dense = r.daily.length > 14, step = r.daily.length > 45 ? 14 : 7;
+    const bars = r.daily.map(d => `<div class="rbar${d.date === today ? ' is-today' : ''}${d.covers ? '' : ' is-zero'}" title="${fmt(d.date, { weekday: 'short', day: 'numeric', month: 'short' })}: ${d.covers} covers"><i style="height:${Math.round(d.covers / max * 100)}%"></i>${!dense && d.covers ? `<em>${d.covers}</em>` : ''}</div>`).join('');
+    const labels = r.daily.map((d, i) => `<span>${!dense ? fmt(d.date, { weekday: 'narrow' }) + ' ' + (+d.date.slice(8)) : i % step === 0 ? fmt(d.date, { day: 'numeric', month: 'short' }) : ''}</span>`).join('');
+    const hb = (rows, c) => { const m = Math.max(1, ...rows.map(x => x[1])); return `<div class="hbars">${rows.map(([l, v, extra]) => `<div class="hbar"><span>${l}</span><i style="--w:${Math.round(v / m * 100)}%;--c:${c}"></i><span>${extra ?? v}</span></div>`).join('')}</div>`; };
+    const srcTotal = r.sources.reduce((n, x) => n + x.bookings, 0) || 1;
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(n => r.weekdays.find(w => w.name === n));
+    box.innerHTML = `<div class="rtiles">
+        <div class="rtile"><small>Covers</small><b>${t.covers}</b><i>${plural(t.bookings, 'booking', 'bookings')}</i></div>
+        <div class="rtile"><small>Average party</small><b>${t.average || '–'}</b><i>guests per booking</i></div>
+        <div class="rtile"><small>No-shows</small><b>${t.noshowRate}%</b><i>${plural(t.noshows, 'table', 'tables')} · ${plural(t.noshowCovers, 'cover', 'covers')} lost</i></div>
+        <div class="rtile"><small>Cancelled</small><b>${t.cancels}</b><i>bookings</i></div>
+        <div class="rtile"><small>Online</small><b>${Math.round((r.sources.find(x => x.source === 'online').bookings / srcTotal) * 100)}%</b><i>of bookings from the website</i></div>
+        <div class="rtile"><small>Waiting list</small><b>${r.waitlist.seated}/${r.waitlist.added}</b><i>seated / added</i></div></div>
+      <div class="sect"><h3>Covers each day</h3><div class="rchart">${bars}</div><div class="rlab">${labels}</div></div>
+      <div class="sect"><h3>Where bookings come from</h3>${hb(r.sources.map(x => [{ online: 'Website', phone: 'Phone', walkin: 'Walk-in' }[x.source], x.bookings, `${x.bookings} · ${Math.round(x.bookings / srcTotal * 100)}%`]), 'var(--gold)')}</div>
+      <div class="sect"><h3>Busiest days</h3><p class="hint">Average covers on days with bookings.</p>${hb(days.map(w => [w.name, w.average]), 'var(--sage)')}</div>
+      <div class="sect"><h3>Busiest times</h3>${r.hours.length ? hb(r.hours.map(x => [`${String(x.hour).padStart(2, '0')}:00`, x.covers]), 'var(--blue)') : '<p class="hint">No bookings in this period.</p>'}</div>
+      <div class="sect"><h3>Party sizes</h3>${r.sizes.length ? hb(r.sizes.map(x => [plural(x.guests, 'guest', 'guests'), x.bookings]), 'var(--amber)') : '<p class="hint">No bookings in this period.</p>'}</div>`;
+  }
+  $('#rSeg', sh).addEventListener('click', e => { const b = e.target.closest('[data-r]'); if (!b) return; pick = b.dataset.r; store.set('report', pick); $$('#rSeg button', sh).forEach(x => x.setAttribute('aria-pressed', String(x === b))); $('#rBody', sh).innerHTML = '<p class="hint">Loading…</p>'; draw(); });
+  draw();
+}
+$('#repBtn').addEventListener('click', openReport);
 
 /* =================================================================== alerts */
 function badge() { const b = $('#badge'); b.hidden = !S.unseen; b.textContent = S.unseen > 9 ? '9+' : S.unseen; }
@@ -1002,7 +1392,7 @@ let lock = null;
 async function wake() { if (!S.prefs.awake || !('wakeLock' in navigator) || document.hidden) return; try { lock = await navigator.wakeLock.request('screen'); } catch {} }
 function sleepOk() { try { lock && lock.release(); } catch {} lock = null; }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.started) { wake(); pulse(false); loadDay(true); } });
-setInterval(() => { if (S.started && S.day && !document.hidden && $('#sheet').hidden) { renderRail(); renderList(); } }, 60000);
+setInterval(() => { if (S.started && S.day && !document.hidden && $('#sheet').hidden) { renderRail(); renderWait(); renderView(); } }, 60000);
 let rsz; addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { if (S.started) renderTop(); }, 200); });
 
 boot();

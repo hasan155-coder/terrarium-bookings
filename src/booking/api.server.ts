@@ -3,6 +3,7 @@
 //   /api/staff/*   used by the staff tablet dashboard (passcode + cookie)
 import * as core from "./core.server.ts";
 import * as auth from "./auth.server.ts";
+import * as extras from "./extras.server.ts";
 import type { DB, Row } from "./core.server.ts";
 
 const BASE_HEADERS = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
@@ -104,7 +105,9 @@ export async function handleStaff(request: Request, db: DB | undefined): Promise
         case "day": {
           const date = q.get("date") ?? core.londonNow().date;
           if (!core.isDate(date)) return json({ ok: false, code: "bad_date" }, 400);
-          return json(await core.staffDay(db, date));
+          const day = await core.staffDay(db, date);
+          const [bookings, waitlist] = await Promise.all([extras.withHistory(db, day.bookings), extras.dayWaitlist(db, date)]);
+          return json({ ...day, bookings, waitlist });
         }
         case "range": {
           const from = q.get("from") ?? core.londonNow().date;
@@ -120,6 +123,10 @@ export async function handleStaff(request: Request, db: DB | undefined): Promise
           return json(await core.staffSearch(db, q.get("q") ?? ""));
         case "settings":
           return json({ ok: true, settings: await core.getSettings(db) });
+        case "guest":
+          return out(await extras.staffGuest(db, Number(q.get("id"))));
+        case "report":
+          return json(await extras.staffReport(db, q.get("from"), q.get("to")));
       }
     }
     if (post) {
@@ -133,6 +140,14 @@ export async function handleStaff(request: Request, db: DB | undefined): Promise
           return out(await core.staffSetDay(db, body));
         case "slot":
           return out(await core.staffSetSlot(db, body));
+        case "assign-day":
+          return out(await core.staffAssignDay(db, body));
+        case "guest-note":
+          return out(await extras.staffGuestNote(db, body));
+        case "wait-add":
+          return out(await extras.staffWaitAdd(db, body));
+        case "wait-update":
+          return out(await extras.staffWaitUpdate(db, body));
         case "settings":
           return json({ ok: true, settings: await core.saveSettings(db, body.settings ?? body) });
         case "passcode": {

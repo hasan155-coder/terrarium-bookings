@@ -14,6 +14,8 @@ export interface DB {
 }
 
 export type Service = { name: string; times: string[] };
+/** A table on the floor. Tables that share a join group can be pushed together for bigger parties. */
+export type Table = { name: string; seats: number; area: string; join: string };
 export type Settings = {
   online: boolean; // accept online bookings at all
   slotCovers: number; // most guests who can start in one time slot
@@ -24,6 +26,8 @@ export type Settings = {
   minNotice: number; // minutes of notice needed for a same-day booking
   closedWeekdays: number[]; // 0 = Sunday ... 6 = Saturday
   services: Service[];
+  reminders: boolean; // email guests a reminder the day before
+  tables: Table[]; // the floor plan, used for automatic table assignment and the table view
 };
 
 const range = (fromH: number, toH: number) => {
@@ -41,6 +45,12 @@ export const DEFAULTS: Settings = {
   daysAhead: 120,
   minNotice: 60,
   closedWeekdays: [2],
+  reminders: true,
+  // A starting layout for 40 seats: replace it with the real tables in Settings.
+  tables: [
+    ...[1, 2, 3, 4].map((n) => ({ name: String(n), seats: 2, area: "Window", join: "A" })),
+    ...[5, 6, 7, 8, 9, 10, 11, 12].map((n) => ({ name: String(n), seats: 4, area: "Restaurant", join: "B" })),
+  ],
   services: [
     { name: "Breakfast", times: range(10, 11.5) },
     { name: "Lunch", times: range(12, 16.5) },
@@ -48,9 +58,9 @@ export const DEFAULTS: Settings = {
   ],
 };
 
-export const STATUSES = ["booked", "seated", "finished", "cancelled", "noshow"] as const;
-const COUNTS_COVERS = new Set(["booked", "seated", "finished"]);
-const HOLDS_SEATS = new Set(["booked", "seated"]);
+export const STATUSES = ["booked", "late", "seated", "finished", "cancelled", "noshow"] as const;
+export const COUNTS_COVERS = new Set(["booked", "late", "seated", "finished"]);
+export const HOLDS_SEATS = new Set(["booked", "late", "seated"]);
 
 /* ------------------------------------------------------------------ time */
 
@@ -93,7 +103,7 @@ export function londonNow(): { date: string; mins: number } {
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
   return { date: `${get("year")}-${get("month")}-${get("day")}`, mins: Number(get("hour")) * 60 + Number(get("minute")) };
 }
-const stamp = () => clock.now().toISOString();
+export const stamp = () => clock.now().toISOString();
 
 /* -------------------------------------------------------------- settings */
 
@@ -101,6 +111,26 @@ const int = (v: unknown, lo: number, hi: number, dflt: number) => {
   const n = Math.round(Number(v));
   return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt;
 };
+
+const tableName = (v: unknown) => String(v ?? "").replace(/[+,]/g, " ").replace(/\s+/g, " ").trim().slice(0, 12);
+function cleanTables(list: unknown[]): Table[] {
+  const out: Table[] = [];
+  const seen = new Set<string>();
+  for (const t of list.slice(0, 80)) {
+    if (!t || typeof t !== "object") continue;
+    const r = t as Partial<Table>;
+    const name = tableName(r.name);
+    if (!name || seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    out.push({
+      name,
+      seats: int(r.seats, 1, 30, 2),
+      area: String(r.area ?? "").trim().slice(0, 24),
+      join: String(r.join ?? "").trim().toUpperCase().slice(0, 4),
+    });
+  }
+  return out;
+}
 
 export function cleanSettings(input: unknown): Settings {
   const s = (input && typeof input === "object" ? input : {}) as Partial<Settings>;
@@ -127,6 +157,8 @@ export function cleanSettings(input: unknown): Settings {
       ? [...new Set(s.closedWeekdays.map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6))].sort()
       : [...DEFAULTS.closedWeekdays],
     services: services.length ? services : DEFAULTS.services.map((x) => ({ ...x, times: [...x.times] })),
+    reminders: s.reminders === undefined ? DEFAULTS.reminders : !!s.reminders,
+    tables: Array.isArray(s.tables) ? cleanTables(s.tables) : DEFAULTS.tables.map((t) => ({ ...t })),
   };
 }
 
@@ -175,7 +207,7 @@ export type Booking = {
   created_at: string;
   updated_at: string;
 };
-const PUBLIC_COLS =
+export const PUBLIC_COLS =
   "id, ref, date, time, mins, duration, guests, first, last, email, phone, occasion, notes, staff_note, table_no, newsletter, source, status, created_at, updated_at";
 
 type DayRules = { closed: boolean; override: number | null; note: string; limits: Map<string, number> };
@@ -192,7 +224,7 @@ async function dayRules(db: DB, s: Settings, date: string): Promise<DayRules> {
   };
 }
 
-async function dayBookings(db: DB, date: string): Promise<Booking[]> {
+export async function dayBookings(db: DB, date: string): Promise<Booking[]> {
   const r = await db.prepare(`SELECT ${PUBLIC_COLS} FROM bookings WHERE date = ?1 ORDER BY mins, id`).bind(date).all<Booking>();
   return r.results;
 }
@@ -222,10 +254,106 @@ export function checkSlot(s: Settings, bookings: Booking[], limits: Map<string, 
   return out;
 }
 
+/* ---------------------------------------------------------------- tables */
+
+export const splitTables = (v: unknown) =>
+  String(v ?? "").split("+").map((s) => s.trim()).filter(Boolean);
+const lc = (s: string) => s.toLowerCase();
+
+/** Tables used, at any point in [start, start + dur), by other bookings that still hold seats. */
+function busyTables(bookings: Booking[], start: number, dur: number, exclude?: number): Set<string> {
+  const busy = new Set<string>();
+  for (const b of bookings) {
+    if (b.id === exclude || !HOLDS_SEATS.has(b.status) || !b.table_no) continue;
+    if (b.mins < start + dur && b.mins + b.duration > start) for (const t of splitTables(b.table_no)) busy.add(lc(t));
+  }
+  return busy;
+}
+
+/**
+ * The best free table for a party, or tables from one join group pushed together.
+ * Smallest fit first, then fewest seats left empty, then fewest tables, then tables next to each other in the list.
+ * Returns "" when nothing on the floor fits; the booking still stands and staff seat it by hand.
+ */
+export function pickTables(s: Settings, bookings: Booking[], time: string, guests: number, duration: number, exclude?: number): string {
+  if (!s.tables.length) return "";
+  const busy = busyTables(bookings, toMins(time), duration, exclude);
+  const order = new Map(s.tables.map((t, i) => [lc(t.name), i]));
+  const free = s.tables.filter((t) => !busy.has(lc(t.name)));
+  const single = free.filter((t) => t.seats >= guests).sort((a, b) => a.seats - b.seats || order.get(lc(a.name))! - order.get(lc(b.name))!)[0];
+  if (single) return single.name;
+  const groups = new Map<string, Table[]>();
+  for (const t of free) if (t.join) groups.set(t.join, [...(groups.get(t.join) ?? []), t]);
+  let best: { tables: Table[]; score: number } | null = null;
+  for (const g of groups.values()) {
+    const list = g.slice(0, 16);
+    const walk = (from: number, picked: Table[], seats: number) => {
+      if (picked.length >= 2 && seats >= guests) {
+        const idx = picked.map((t) => order.get(lc(t.name))!);
+        const score = (seats - guests) * 100 + picked.length * 10 + (Math.max(...idx) - Math.min(...idx) - (picked.length - 1));
+        if (!best || score < best.score) best = { tables: [...picked], score };
+        return;
+      }
+      if (picked.length >= 4) return;
+      for (let i = from; i < list.length; i++) walk(i + 1, [...picked, list[i]], seats + list[i].seats);
+    };
+    walk(0, [], 0);
+  }
+  if (!best) return "";
+  return (best as { tables: Table[] }).tables
+    .sort((a, b) => order.get(lc(a.name))! - order.get(lc(b.name))!)
+    .map((t) => t.name)
+    .join("+");
+}
+
+/** Tables shared at the same time by two bookings that still hold seats, keyed by booking id. */
+export function tableClashes(bookings: Booking[]): Map<number, string[]> {
+  const out = new Map<number, string[]>();
+  const live = bookings.filter((b) => HOLDS_SEATS.has(b.status) && b.table_no);
+  for (const a of live)
+    for (const b of live) {
+      if (a.id === b.id || !(a.mins < b.mins + b.duration && b.mins < a.mins + a.duration)) continue;
+      const shared = splitTables(a.table_no).filter((t) => splitTables(b.table_no).some((x) => lc(x) === lc(t)));
+      if (shared.length) out.set(a.id, [...new Set([...(out.get(a.id) ?? []), ...shared])]);
+    }
+  return out;
+}
+
+const seatsAt = (s: Settings, tableNo: string) =>
+  splitTables(tableNo).reduce((n, t) => n + (s.tables.find((x) => lc(x.name) === lc(t))?.seats ?? 0), 0);
+
+/** Gives a table to one booking that has none yet. Returns the tables given, or "". */
+export async function autoTable(db: DB, id: number): Promise<string> {
+  const b = await db.prepare(`SELECT ${PUBLIC_COLS} FROM bookings WHERE id = ?1`).bind(id).first<Booking>();
+  if (!b || b.table_no || !HOLDS_SEATS.has(b.status)) return b?.table_no ?? "";
+  const s = await getSettings(db);
+  const pick = pickTables(s, await dayBookings(db, b.date), b.time, b.guests, b.duration, b.id);
+  if (pick) await db.prepare("UPDATE bookings SET table_no = ?2, updated_at = ?3 WHERE id = ?1 AND table_no = ''").bind(id, pick, stamp()).run();
+  return pick;
+}
+
+/** Gives tables to every booking on a day that is still expected and has none, earliest first. */
+export async function staffAssignDay(db: DB, input: Row) {
+  if (!isDate(input.date)) return fail(400, "bad_date", "Pick a date.");
+  const s = await getSettings(db);
+  if (!s.tables.length) return fail(400, "no_tables", "Add your tables in Settings first.");
+  const bookings = await dayBookings(db, input.date);
+  let given = 0, left = 0;
+  for (const b of bookings) {
+    if (!HOLDS_SEATS.has(b.status) || b.table_no) continue;
+    const pick = pickTables(s, bookings, b.time, b.guests, b.duration, b.id);
+    if (!pick) { left++; continue; }
+    b.table_no = pick;
+    await db.prepare("UPDATE bookings SET table_no = ?2, updated_at = ?3 WHERE id = ?1").bind(b.id, pick, stamp()).run();
+    given++;
+  }
+  return { status: 200, body: { ok: true, given, left } };
+}
+
 /* ------------------------------------------------------ public: availability */
 
 export type Fail = { status: number; body: Row };
-const fail = (status: number, code: string, message: string, extra: Row = {}): Fail => ({ status, body: { ok: false, code, message, ...extra } });
+export const fail = (status: number, code: string, message: string, extra: Row = {}): Fail => ({ status, body: { ok: false, code, message, ...extra } });
 
 function windowFor(s: Settings) {
   const now = londonNow();
@@ -282,7 +410,7 @@ export async function publicCalendar(db: DB, guestsIn: unknown) {
     db.prepare("SELECT date, closed FROM days WHERE date BETWEEN ?1 AND ?2").bind(now.date, last).all<{ date: string; closed: number | null }>(),
     db.prepare("SELECT date, time, covers FROM slot_limits WHERE date BETWEEN ?1 AND ?2").bind(now.date, last).all<{ date: string; time: string; covers: number }>(),
     db
-      .prepare(`SELECT ${PUBLIC_COLS} FROM bookings WHERE date BETWEEN ?1 AND ?2 AND status IN ('booked','seated','finished')`)
+      .prepare(`SELECT ${PUBLIC_COLS} FROM bookings WHERE date BETWEEN ?1 AND ?2 AND status IN ('booked','late','seated','finished')`)
       .bind(now.date, last)
       .all<Booking>(),
   ]);
@@ -320,7 +448,7 @@ export function newRef(): string {
   for (const x of r) out += REF_CHARS[x % REF_CHARS.length];
   return out;
 }
-const str = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "").trim().slice(0, max) : "");
+export const str = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, "").trim().slice(0, max) : "");
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function createOnline(db: DB, input: Row, ipHash: string) {
@@ -346,7 +474,7 @@ export async function createOnline(db: DB, input: Row, ipHash: string) {
 
   // Same guest, same slot, already booked: hand back the existing booking (double taps, retries).
   const dup = await db
-    .prepare("SELECT ref, date, time, guests, first FROM bookings WHERE date = ?1 AND time = ?2 AND lower(email) = lower(?3) AND status IN ('booked','seated')")
+    .prepare("SELECT ref, date, time, guests, first FROM bookings WHERE date = ?1 AND time = ?2 AND lower(email) = lower(?3) AND status IN ('booked','late','seated')")
     .bind(date, time, email)
     .first<Row>();
   if (dup) return { status: 200, body: { ok: true, duplicate: true, booking: dup } };
@@ -363,14 +491,14 @@ export async function createOnline(db: DB, input: Row, ipHash: string) {
   const sql = `
     INSERT INTO bookings (ref, date, time, mins, duration, guests, first, last, email, phone, occasion, notes, newsletter, source, status, ip, created_at, updated_at)
     SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, 'online', 'booked', ?14, ?15, ?15
-    WHERE (SELECT COALESCE(SUM(guests), 0) FROM bookings WHERE date = ?2 AND time = ?3 AND status IN ('booked','seated','finished')) + ?6 <= ?16
+    WHERE (SELECT COALESCE(SUM(guests), 0) FROM bookings WHERE date = ?2 AND time = ?3 AND status IN ('booked','late','seated','finished')) + ?6 <= ?16
       AND NOT EXISTS (
         SELECT 1 FROM (
           SELECT ?4 AS p
-          UNION SELECT mins FROM bookings WHERE date = ?2 AND status IN ('booked','seated') AND mins > ?4 AND mins < ?4 + ?5
+          UNION SELECT mins FROM bookings WHERE date = ?2 AND status IN ('booked','late','seated') AND mins > ?4 AND mins < ?4 + ?5
         ) AS pts
         WHERE (SELECT COALESCE(SUM(b.guests), 0) FROM bookings AS b
-               WHERE b.date = ?2 AND b.status IN ('booked','seated') AND b.mins <= pts.p AND b.mins + b.duration > pts.p) + ?6 > ?17
+               WHERE b.date = ?2 AND b.status IN ('booked','late','seated') AND b.mins <= pts.p AND b.mins + b.duration > pts.p) + ?6 > ?17
       )`;
   for (let attempt = 0; attempt < 4; attempt++) {
     const ref = newRef();
@@ -383,6 +511,7 @@ export async function createOnline(db: DB, input: Row, ipHash: string) {
         const fresh = timesFor(s, date, guests, rules, await dayBookings(db, date));
         return fail(409, "full", "Sorry, that time has just been taken. Please pick another.", { services: fresh });
       }
+      if (r.meta.last_row_id) await autoTable(db, Number(r.meta.last_row_id)).catch(() => "");
       return { status: 200, body: { ok: true, booking: { ref, date, time, guests, first } } };
     } catch (e) {
       if (!/UNIQUE/i.test(String(e))) throw e;
@@ -395,7 +524,7 @@ export async function cancelOnline(db: DB, input: Row) {
   const ref = str(input.ref, 20).toUpperCase(), email = str(input.email, 120);
   if (!ref || !email) return fail(400, "bad_input", "Please give your booking reference and email.");
   const r = await db
-    .prepare("UPDATE bookings SET status = 'cancelled', updated_at = ?3 WHERE ref = ?1 AND lower(email) = lower(?2) AND status = 'booked' AND date >= ?4")
+    .prepare("UPDATE bookings SET status = 'cancelled', updated_at = ?3 WHERE ref = ?1 AND lower(email) = lower(?2) AND status IN ('booked','late') AND date >= ?4")
     .bind(ref, email, stamp(), londonNow().date)
     .run();
   if ((r.meta.changes ?? 0) < 1) return fail(404, "not_found", "We could not find an upcoming booking with those details.");
@@ -424,6 +553,11 @@ export async function staffDay(db: DB, date: string) {
   });
   const live = bookings.filter((b) => COUNTS_COVERS.has(b.status));
   const sum = (arr: Booking[]) => arr.reduce((n, b) => n + b.guests, 0);
+  const clashes = tableClashes(bookings);
+  for (const b of bookings as (Booking & { clash?: string[]; tableSeats?: number })[]) {
+    if (clashes.has(b.id)) b.clash = clashes.get(b.id);
+    if (b.table_no) b.tableSeats = seatsAt(s, b.table_no);
+  }
   return {
     ok: true,
     date,
@@ -438,12 +572,14 @@ export async function staffDay(db: DB, date: string) {
     totals: {
       covers: sum(live),
       bookings: live.length,
-      waiting: sum(bookings.filter((b) => b.status === "booked")),
+      waiting: sum(bookings.filter((b) => b.status === "booked" || b.status === "late")),
+      late: bookings.filter((b) => b.status === "late").length,
       seated: sum(bookings.filter((b) => b.status === "seated")),
       finished: sum(bookings.filter((b) => b.status === "finished")),
       cancelled: bookings.filter((b) => b.status === "cancelled").length,
       noshow: bookings.filter((b) => b.status === "noshow").length,
       online: live.filter((b) => b.source === "online").length,
+      untabled: s.tables.length ? bookings.filter((b) => HOLDS_SEATS.has(b.status) && !b.table_no).length : 0,
       peak: Math.max(0, ...slots.map((x) => x.held)),
       capacity: s.capacity,
     },
@@ -455,7 +591,7 @@ export async function staffRange(db: DB, from: string, days: number) {
   const to = addDays(from, days - 1);
   const [counts, overrides] = await Promise.all([
     db
-      .prepare("SELECT date, COUNT(*) AS n, SUM(guests) AS covers FROM bookings WHERE date BETWEEN ?1 AND ?2 AND status IN ('booked','seated','finished') GROUP BY date")
+      .prepare("SELECT date, COUNT(*) AS n, SUM(guests) AS covers FROM bookings WHERE date BETWEEN ?1 AND ?2 AND status IN ('booked','late','seated','finished') GROUP BY date")
       .bind(from, to)
       .all<{ date: string; n: number; covers: number }>(),
     db.prepare("SELECT date, closed FROM days WHERE date BETWEEN ?1 AND ?2").bind(from, to).all<{ date: string; closed: number | null }>(),
@@ -477,7 +613,13 @@ export async function staffRange(db: DB, from: string, days: number) {
 }
 
 export async function staffPulse(db: DB, since: number) {
-  const top = await db.prepare("SELECT COALESCE(MAX(id), 0) AS maxId, COALESCE(MAX(updated_at), '') AS stamp FROM bookings").first<{ maxId: number; stamp: string }>();
+  // The stamp moves whenever a booking or the waiting list changes, so other tablets refresh.
+  const top = await db
+    .prepare(
+      `SELECT (SELECT COALESCE(MAX(id), 0) FROM bookings) AS maxId,
+              max((SELECT COALESCE(MAX(updated_at), '') FROM bookings), (SELECT COALESCE(MAX(updated_at), '') FROM waitlist)) AS stamp`,
+    )
+    .first<{ maxId: number; stamp: string }>();
   const fresh = since > 0
     ? (await db.prepare(`SELECT ${PUBLIC_COLS} FROM bookings WHERE id > ?1 AND source = 'online' ORDER BY id LIMIT 20`).bind(since).all<Booking>()).results
     : [];
@@ -538,11 +680,13 @@ export async function staffCreate(db: DB, input: Row) {
         )
         .bind(
           ref, date, time, toMins(time), s.duration, guests, first, str(input.last, 60), str(input.email, 120), str(input.phone, 30),
-          str(input.occasion, 30), str(input.notes, 600), str(input.staff_note, 600), str(input.table_no, 20), source,
+          str(input.occasion, 30), str(input.notes, 600), str(input.staff_note, 600), input.table_no === "auto" ? "" : str(input.table_no, 40), source,
           source === "walkin" ? "seated" : "booked", at,
         )
         .run();
-      return { status: 200, body: { ok: true, id: r.meta.last_row_id, ref } };
+      const id = Number(r.meta.last_row_id);
+      const table = !str(input.table_no, 40) || input.table_no === "auto" ? await autoTable(db, id).catch(() => "") : str(input.table_no, 40);
+      return { status: 200, body: { ok: true, id, ref, table } };
     } catch (e) {
       if (!/UNIQUE/i.test(String(e))) throw e;
     }
@@ -551,14 +695,15 @@ export async function staffCreate(db: DB, input: Row) {
 }
 
 const EDITABLE = ["first", "last", "email", "phone", "occasion", "notes", "staff_note", "table_no"] as const;
-const LIMITS: Record<string, number> = { first: 60, last: 60, email: 120, phone: 30, occasion: 30, notes: 600, staff_note: 600, table_no: 20 };
+const LIMITS: Record<string, number> = { first: 60, last: 60, email: 120, phone: 30, occasion: 30, notes: 600, staff_note: 600, table_no: 40 };
 
 export async function staffUpdate(db: DB, input: Row) {
   const id = Number(input.id);
   const cur = await db.prepare(`SELECT ${PUBLIC_COLS} FROM bookings WHERE id = ?1`).bind(id).first<Booking>();
   if (!cur) return fail(404, "not_found", "That booking no longer exists.");
   const next: Booking = { ...cur };
-  for (const k of EDITABLE) if (typeof input[k] === "string") (next as Record<string, unknown>)[k] = str(input[k], LIMITS[k]);
+  const reTable = input.table_no === "auto";
+  for (const k of EDITABLE) if (typeof input[k] === "string" && !(k === "table_no" && reTable)) (next as Record<string, unknown>)[k] = str(input[k], LIMITS[k]);
   if (input.status !== undefined) {
     if (!STATUSES.includes(input.status as (typeof STATUSES)[number])) return fail(400, "bad_status", "Unknown status.");
     next.status = String(input.status);
@@ -590,9 +735,10 @@ export async function staffUpdate(db: DB, input: Row) {
       `UPDATE bookings SET date = ?2, time = ?3, mins = ?4, guests = ?5, first = ?6, last = ?7, email = ?8, phone = ?9, occasion = ?10,
        notes = ?11, staff_note = ?12, table_no = ?13, status = ?14, updated_at = ?15 WHERE id = ?1`,
     )
-    .bind(id, next.date, next.time, next.mins, next.guests, next.first, next.last, next.email, next.phone, next.occasion, next.notes, next.staff_note, next.table_no, next.status, stamp())
+    .bind(id, next.date, next.time, next.mins, next.guests, next.first, next.last, next.email, next.phone, next.occasion, next.notes, next.staff_note, reTable ? "" : next.table_no, next.status, stamp())
     .run();
-  return { status: 200, body: { ok: true } };
+  const table = reTable ? await autoTable(db, id) : next.table_no;
+  return { status: 200, body: { ok: true, table } };
 }
 
 export async function staffSetDay(db: DB, input: Row) {

@@ -64,3 +64,36 @@ CREATE INDEX IF NOT EXISTS attempts_ip_idx ON attempts (ip, at);
 -- One-time code for creating the staff passcode on first use (only the hash is stored).
 INSERT OR IGNORE INTO settings (key, value)
 VALUES ('setup_code_sha256', '8314b1c0dc68fab1a155b28e22e3c2fc3ffab4f362096ae1cfb49c1d4ace4b2d');
+
+-- Day-before reminder emails: one row per reminded booking, so nobody gets two.
+CREATE TABLE IF NOT EXISTS reminders (
+  ref TEXT PRIMARY KEY,
+  sent_at TEXT NOT NULL
+);
+
+-- Private key for signing guests' one-tap cancel links (made once, never shown).
+INSERT OR IGNORE INTO settings (key, value)
+VALUES ('link_secret', lower(hex(randomblob(32))));
+
+-- Walk-in waiting list: parties waiting at the door for a table.
+CREATE TABLE IF NOT EXISTS waitlist (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL,                      -- YYYY-MM-DD (Europe/London)
+  name TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  guests INTEGER NOT NULL,
+  quote INTEGER NOT NULL DEFAULT 0,        -- minutes of wait the guest was told
+  notes TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'waiting',  -- waiting | seated | left
+  booking_id INTEGER,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS waitlist_date_idx ON waitlist (date, status);
+
+-- Notes that follow a guest from visit to visit (allergies, favourite table). Keyed by email or phone.
+CREATE TABLE IF NOT EXISTS guests (
+  key TEXT PRIMARY KEY,                    -- 'e:' + lower-case email, or 'p:' + phone digits
+  note TEXT NOT NULL DEFAULT '',
+  updated_at TEXT NOT NULL
+);

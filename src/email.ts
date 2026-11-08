@@ -1,6 +1,8 @@
 // Booking emails, sent by the booking server through Resend:
 //  - a confirmation to the guest (from the restaurant's own domain, with a calendar invite)
 //  - a copy to the restaurant inbox
+//  - a reminder to the guest the day before, with a one-tap cancel link
+//  - an alert to the restaurant when a guest cancels online
 export type MailEnv = {
   RESEND_API_KEY?: string;
   RESEND_API_URL?: string;
@@ -88,7 +90,7 @@ function row(label: string, value: string, gold = false) {
 <td style="padding:10px 0;border-top:1px solid #35312a;font:${gold ? "600 17px" : "15px"}/1.5 ${SANS};color:${gold ? "#ecd49c" : "#efe6d4"};${gold ? "letter-spacing:2px;" : ""}">${value}</td></tr>`;
 }
 
-export function guestEmail(b: Booked, site = "") {
+export function guestEmail(b: Booked, site = "", cancelUrl = "") {
   const rows = [
     row("Date", esc(longDate(b.date))),
     row("Time", esc(b.time)),
@@ -115,7 +117,7 @@ export function guestEmail(b: Booked, site = "") {
 <p style="margin:8px 0 0;font:13px/1.6 ${SANS};color:#8e8573">On an iPhone or Outlook, open the attached invite to add it to your calendar.</p>
 </td></tr>
 <tr><td style="padding:22px 36px 34px">
-<p style="margin:0;padding-top:20px;border-top:1px solid #35312a;font:14px/1.6 ${SANS};color:#c8bea9">Need to change or cancel? Call us on <a href="tel:${PLACE.phoneIntl}" style="color:#ecd49c;text-decoration:none">${PLACE.phone}</a> or simply reply to this email.</p>
+<p style="margin:0;padding-top:20px;border-top:1px solid #35312a;font:14px/1.6 ${SANS};color:#c8bea9">Need to change or cancel? Call us on <a href="tel:${PLACE.phoneIntl}" style="color:#ecd49c;text-decoration:none">${PLACE.phone}</a> or simply reply to this email.${cancelUrl ? ` Can't make it at all? <a href="${esc(cancelUrl)}" style="color:#ecd49c">Cancel your table online</a>.` : ""}</p>
 </td></tr>
 </table>
 <p style="margin:22px 0 0;font:12px/1.7 ${SANS};color:#8e8573">${PLACE.name} &middot; ${PLACE.address} &middot; <a href="tel:${PLACE.phoneIntl}" style="color:#8e8573">${PLACE.phone}</a>${site ? ` &middot; <a href="${esc(site)}" style="color:#8e8573">Website</a>` : ""}</p>
@@ -130,9 +132,65 @@ export function guestEmail(b: Booked, site = "") {
     `Add to Google Calendar: ${googleCalendarLink(b)}`,
     `Directions: ${PLACE.maps}`, ``,
     `Need to change or cancel? Call ${PLACE.phone} or reply to this email.`,
+    ...(cancelUrl ? [`Can't make it? Cancel online: ${cancelUrl}`] : []),
     `${PLACE.name}, ${PLACE.address}`,
   ].join("\n");
   return { subject: `Your table is confirmed: ${shortDate(b.date)} at ${b.time}`, html, text };
+}
+
+export function reminderEmail(b: Booked, cancelUrl = "", site = "") {
+  const rows = [
+    row("Date", esc(longDate(b.date))),
+    row("Time", esc(b.time)),
+    row("Guests", String(b.guests)),
+    row("Reference", esc(b.ref), true),
+  ].join("");
+  const html = `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark light"><title>See you tomorrow</title></head>
+<body style="margin:0;padding:0;background:#181713">
+<div style="display:none;max-height:0;overflow:hidden;color:#181713">${esc(`Your table for ${b.guests} is tomorrow at ${b.time}. Reference ${b.ref}.`)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#181713"><tr><td align="center" style="padding:32px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#1f1d19;border:1px solid #4a3f2c;border-radius:6px">
+<tr><td style="padding:36px 36px 8px">
+<p style="margin:0 0 28px;font:600 11px/1 ${SANS};letter-spacing:4px;text-transform:uppercase;color:#c9a66b">Terrarium Bistro &middot; Tarporley</p>
+<h1 style="margin:0;font:400 40px/1.08 ${SERIF};color:#efe6d4">See you <i style="color:#c9a66b">tomorrow.</i></h1>
+<p style="margin:18px 0 26px;font:15px/1.6 ${SANS};color:#c8bea9">A quick reminder of your table, ${esc(b.first)}. We are looking forward to looking after you.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+</td></tr>
+<tr><td style="padding:22px 36px 6px">
+<a href="${esc(PLACE.maps)}" style="display:inline-block;margin:0 8px 10px 0;padding:14px 22px;background:#c9a66b;color:#181713;border-radius:2px;font:600 13px/1 ${SANS};letter-spacing:1px;text-decoration:none">Get directions</a>
+${cancelUrl ? `<a href="${esc(cancelUrl)}" style="display:inline-block;margin:0 0 10px;padding:13px 21px;border:1px solid #c9a66b;color:#ecd49c;border-radius:2px;font:600 13px/1 ${SANS};letter-spacing:1px;text-decoration:none">Can't make it? Cancel</a>` : ""}
+</td></tr>
+<tr><td style="padding:22px 36px 34px">
+<p style="margin:0;padding-top:20px;border-top:1px solid #35312a;font:14px/1.6 ${SANS};color:#c8bea9">Running late or need a different time? Call us on <a href="tel:${PLACE.phoneIntl}" style="color:#ecd49c;text-decoration:none">${PLACE.phone}</a> and we will do our best to help. Cancelling frees your table for another guest, so we are grateful when you let us know.</p>
+</td></tr>
+</table>
+<p style="margin:22px 0 0;font:12px/1.7 ${SANS};color:#8e8573">${PLACE.name} &middot; ${PLACE.address} &middot; <a href="tel:${PLACE.phoneIntl}" style="color:#8e8573">${PLACE.phone}</a>${site ? ` &middot; <a href="${esc(site)}" style="color:#8e8573">Website</a>` : ""}</p>
+</td></tr></table></body></html>`;
+  const text = [
+    `See you tomorrow at Terrarium Bistro.`, ``,
+    `A quick reminder of your table, ${b.first}.`, ``,
+    `Date: ${longDate(b.date)}`, `Time: ${b.time}`, `Guests: ${b.guests}`, `Reference: ${b.ref}`, ``,
+    `Directions: ${PLACE.maps}`,
+    ...(cancelUrl ? [`Can't make it? Cancel here: ${cancelUrl}`] : []),
+    `Running late or need a different time? Call ${PLACE.phone}.`,
+    `${PLACE.name}, ${PLACE.address}`,
+  ].join("\n");
+  return { subject: `See you tomorrow at ${b.time}: your table at Terrarium Bistro`, html, text };
+}
+
+export function restaurantCancelledEmail(b: Booked, staffUrl = "") {
+  const who = `${b.first} ${b.last}`.trim() || "A guest";
+  const html = `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"></head><body style="margin:0;background:#181713">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#181713"><tr><td align="center" style="padding:24px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#1f1d19;border:1px solid #4a3f2c;border-radius:6px"><tr><td style="padding:28px 30px">
+<p style="margin:0 0 10px;font:600 11px/1 ${SANS};letter-spacing:4px;text-transform:uppercase;color:#e6a093">Cancelled online by the guest</p>
+<h1 style="margin:0 0 18px;font:400 30px/1.15 ${SERIF};color:#efe6d4">${esc(who)}, ${b.guests} ${b.guests === 1 ? "guest" : "guests"}</h1>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${row("When", esc(`${longDate(b.date)} at ${b.time}`))}${row("Phone", esc(b.phone || "None"))}${row("Reference", esc(b.ref), true)}</table>
+${staffUrl ? `<p style="margin:22px 0 0"><a href="${esc(staffUrl)}" style="display:inline-block;padding:13px 20px;background:#c9a66b;color:#181713;border-radius:2px;font:600 13px/1 ${SANS};text-decoration:none">Open the bookings tablet</a></p>` : ""}
+<p style="margin:18px 0 0;font:12px/1.6 ${SANS};color:#8e8573">The table is free again and the website is offering the time to other guests.</p>
+</td></tr></table></td></tr></table></body></html>`;
+  const text = `Cancelled online by the guest\n\n${who}, ${b.guests} guests\n${longDate(b.date)} at ${b.time}\nPhone: ${b.phone || "None"}\nReference: ${b.ref}\n${staffUrl ? `\nTablet: ${staffUrl}\n` : ""}`;
+  return { subject: `Cancelled online: ${who}, ${b.guests} ${b.guests === 1 ? "guest" : "guests"}, ${shortDate(b.date)} at ${b.time} (${b.ref})`, html, text };
 }
 
 export function restaurantEmail(b: Booked, staffUrl = "") {
@@ -167,8 +225,31 @@ const toBase64 = (s: string) => {
   return btoa(bin);
 };
 
+/** Sends one email through Resend. Resolves true when Resend accepted it. */
+export async function sendEmail(env: MailEnv, payload: Record<string, unknown>): Promise<boolean> {
+  if (!env.RESEND_API_KEY) return false;
+  const url = env.RESEND_API_URL || "https://api.resend.com/emails";
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 6000);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: env.MAIL_FROM || "Terrarium Bistro <bookings@terrariumbistro.co.uk>", ...payload }),
+      signal: ctl.signal,
+    });
+    if (!res.ok) console.error("email", res.status, await res.text().catch(() => ""));
+    return res.ok;
+  } catch (e) {
+    console.error("email", e);
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Sends the guest confirmation (and a restaurant copy). Resolves true when the guest email was accepted. */
-export async function sendBookingEmails(env: MailEnv, raw: Record<string, unknown>, ref: string): Promise<boolean> {
+export async function sendBookingEmails(env: MailEnv, raw: Record<string, unknown>, ref: string, cancelUrl = ""): Promise<boolean> {
   if (!env.RESEND_API_KEY) return false;
   const b: Booked = {
     ref,
@@ -183,31 +264,11 @@ export async function sendBookingEmails(env: MailEnv, raw: Record<string, unknow
     notes: clip(raw.notes, 600),
     newsletter: !!raw.newsletter,
   };
-  const url = env.RESEND_API_URL || "https://api.resend.com/emails";
-  const from = env.MAIL_FROM || "Terrarium Bistro <bookings@terrariumbistro.co.uk>";
-  const send = async (payload: Record<string, unknown>) => {
-    const ctl = new AbortController();
-    const timer = setTimeout(() => ctl.abort(), 6000);
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: ctl.signal,
-      });
-      if (!res.ok) console.error("email", res.status, await res.text().catch(() => ""));
-      return res.ok;
-    } catch (e) {
-      console.error("email", e);
-      return false;
-    } finally {
-      clearTimeout(timer);
-    }
-  };
-  const g = guestEmail(b, env.PUBLIC_SITE);
+  const send = (payload: Record<string, unknown>) => sendEmail(env, payload);
+  const g = guestEmail(b, env.PUBLIC_SITE, cancelUrl);
   const jobs: Promise<boolean>[] = [
     send({
-      from, to: [b.email], subject: g.subject, html: g.html, text: g.text,
+      to: [b.email], subject: g.subject, html: g.html, text: g.text,
       reply_to: env.RESTAURANT_EMAIL || undefined,
       attachments: [{ filename: "terrarium-booking.ics", content: toBase64(calendarFile(b)), content_type: "text/calendar" }],
       headers: { "X-Entity-Ref-ID": b.ref },
@@ -215,7 +276,7 @@ export async function sendBookingEmails(env: MailEnv, raw: Record<string, unknow
   ];
   if (env.RESTAURANT_EMAIL) {
     const r = restaurantEmail(b, env.STAFF_URL);
-    jobs.push(send({ from, to: [env.RESTAURANT_EMAIL], subject: r.subject, html: r.html, text: r.text, reply_to: b.email }));
+    jobs.push(send({ to: [env.RESTAURANT_EMAIL], subject: r.subject, html: r.html, text: r.text, reply_to: b.email }));
   }
   const [guestOk] = await Promise.all(jobs);
   return guestOk;
