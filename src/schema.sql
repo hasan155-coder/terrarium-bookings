@@ -97,3 +97,58 @@ CREATE TABLE IF NOT EXISTS guests (
   note TEXT NOT NULL DEFAULT '',
   updated_at TEXT NOT NULL
 );
+
+-- Gift vouchers: bought online by card (Stripe) or sold at the bar, then checked and spent on the tablet.
+CREATE TABLE IF NOT EXISTS vouchers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  serial TEXT NOT NULL UNIQUE,              -- TB-XXXX-XXXX-X, printed on the voucher
+  amount INTEGER NOT NULL,                  -- value in pence
+  balance INTEGER NOT NULL,                 -- pence still to spend
+  status TEXT NOT NULL DEFAULT 'pending',   -- pending (paying) | active | used | void | unpaid
+  source TEXT NOT NULL DEFAULT 'online',    -- online | bar | phone
+  paid_by TEXT NOT NULL DEFAULT '',         -- card online | card | cash
+  to_name TEXT NOT NULL DEFAULT '',
+  from_name TEXT NOT NULL DEFAULT '',
+  message TEXT NOT NULL DEFAULT '',
+  buyer_email TEXT NOT NULL DEFAULT '',
+  recipient_email TEXT NOT NULL DEFAULT '',
+  deliver TEXT NOT NULL DEFAULT 'buyer',    -- recipient | buyer | none
+  send_on TEXT NOT NULL DEFAULT '',         -- YYYY-MM-DD the voucher email goes out
+  sent_at TEXT,
+  stripe_session TEXT,
+  stripe_payment TEXT,
+  paid_at TEXT,
+  expires_on TEXT NOT NULL DEFAULT '',      -- YYYY-MM-DD, 12 months after purchase
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS vouchers_session_idx ON vouchers (stripe_session);
+CREATE INDEX IF NOT EXISTS vouchers_status_idx ON vouchers (status, created_at);
+
+-- Every time part of a voucher is spent (a negative amount puts money back after a mistake).
+CREATE TABLE IF NOT EXISTS voucher_uses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  voucher_id INTEGER NOT NULL,
+  amount INTEGER NOT NULL,
+  note TEXT NOT NULL DEFAULT '',
+  undone INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS voucher_uses_idx ON voucher_uses (voucher_id);
+
+-- Deposits for large groups, one per booking.
+CREATE TABLE IF NOT EXISTS deposits (
+  booking_id INTEGER PRIMARY KEY,
+  ref TEXT NOT NULL,
+  amount INTEGER NOT NULL,                  -- pence
+  status TEXT NOT NULL DEFAULT 'due',       -- due | paid | waived | refunded | lapsed
+  hold_until TEXT,                          -- online bookings: seats are held until then while the guest pays
+  stripe_session TEXT,
+  stripe_payment TEXT,
+  paid_at TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS deposits_status_idx ON deposits (status, hold_until);
+CREATE INDEX IF NOT EXISTS deposits_session_idx ON deposits (stripe_session);

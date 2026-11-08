@@ -28,6 +28,9 @@ export type Settings = {
   services: Service[];
   reminders: boolean; // email guests a reminder the day before
   tables: Table[]; // the floor plan, used for automatic table assignment and the table view
+  depositFrom: number; // parties of this size or more pay a deposit (0 = no deposits)
+  depositPerHead: number; // deposit per guest, in pounds
+  depositHours: number; // cancel at least this many hours before to have the deposit refunded
 };
 
 const range = (fromH: number, toH: number) => {
@@ -46,6 +49,9 @@ export const DEFAULTS: Settings = {
   minNotice: 60,
   closedWeekdays: [2],
   reminders: true,
+  depositFrom: 9,
+  depositPerHead: 10,
+  depositHours: 48,
   // A starting layout for 40 seats: replace it with the real tables in Settings.
   tables: [
     ...[1, 2, 3, 4].map((n) => ({ name: String(n), seats: 2, area: "Window", join: "A" })),
@@ -159,6 +165,9 @@ export function cleanSettings(input: unknown): Settings {
     services: services.length ? services : DEFAULTS.services.map((x) => ({ ...x, times: [...x.times] })),
     reminders: s.reminders === undefined ? DEFAULTS.reminders : !!s.reminders,
     tables: Array.isArray(s.tables) ? cleanTables(s.tables) : DEFAULTS.tables.map((t) => ({ ...t })),
+    depositFrom: int(s.depositFrom, 0, 200, DEFAULTS.depositFrom),
+    depositPerHead: int(s.depositPerHead, 1, 200, DEFAULTS.depositPerHead),
+    depositHours: int(s.depositHours, 0, 720, DEFAULTS.depositHours),
   };
 }
 
@@ -252,6 +261,13 @@ export function checkSlot(s: Settings, bookings: Booking[], limits: Map<string, 
   if (covers + guests > limit) Object.assign(out, { ok: false, reason: "slot" });
   else if (peak + guests > s.capacity) Object.assign(out, { ok: false, reason: "seats" });
   return out;
+}
+
+/** True when `guests` more people still fit at that time on that day (slot limit and seats). */
+export async function checkSlotFor(db: DB, date: string, time: string, guests: number, exclude?: number) {
+  const s = await getSettings(db);
+  const rules = await dayRules(db, s, date);
+  return checkSlot(s, await dayBookings(db, date), rules.limits, time, guests, exclude).ok;
 }
 
 /* ---------------------------------------------------------------- tables */
@@ -399,6 +415,9 @@ export async function publicCalendar(db: DB, guestsIn: unknown) {
     last,
     online: s.online,
     maxOnline: s.maxOnline,
+    depositFrom: s.depositFrom,
+    depositPerHead: s.depositPerHead,
+    depositHours: s.depositHours,
     daysAhead: s.daysAhead,
     minNotice: s.minNotice,
     closedWeekdays: s.closedWeekdays,
@@ -441,6 +460,10 @@ export async function publicCalendar(db: DB, guestsIn: unknown) {
 
 /* ------------------------------------------------------ public: create booking */
 
+/** The deposit a party of this size pays, in pence (0 when none is needed). */
+export const depositPence = (s: Settings, guests: number) =>
+  s.depositFrom > 0 && guests >= s.depositFrom ? guests * s.depositPerHead * 100 : 0;
+
 const REF_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 export function newRef(): string {
   const r = crypto.getRandomValues(new Uint8Array(6));
@@ -474,7 +497,7 @@ export async function createOnline(db: DB, input: Row, ipHash: string) {
 
   // Same guest, same slot, already booked: hand back the existing booking (double taps, retries).
   const dup = await db
-    .prepare("SELECT ref, date, time, guests, first FROM bookings WHERE date = ?1 AND time = ?2 AND lower(email) = lower(?3) AND status IN ('booked','late','seated')")
+    .prepare("SELECT id, ref, date, time, guests, first FROM bookings WHERE date = ?1 AND time = ?2 AND lower(email) = lower(?3) AND status IN ('booked','late','seated')")
     .bind(date, time, email)
     .first<Row>();
   if (dup) return { status: 200, body: { ok: true, duplicate: true, booking: dup } };
@@ -511,8 +534,10 @@ export async function createOnline(db: DB, input: Row, ipHash: string) {
         const fresh = timesFor(s, date, guests, rules, await dayBookings(db, date));
         return fail(409, "full", "Sorry, that time has just been taken. Please pick another.", { services: fresh });
       }
-      if (r.meta.last_row_id) await autoTable(db, Number(r.meta.last_row_id)).catch(() => "");
-      return { status: 200, body: { ok: true, booking: { ref, date, time, guests, first } } };
+      const id = Number(r.meta.last_row_id);
+      if (id) await autoTable(db, id).catch(() => "");
+      const deposit = depositPence(s, guests);
+      return { status: 200, body: { ok: true, booking: { id, ref, date, time, guests, first }, ...(deposit ? { deposit } : {}) } };
     } catch (e) {
       if (!/UNIQUE/i.test(String(e))) throw e;
     }
@@ -617,11 +642,11 @@ export async function staffPulse(db: DB, since: number) {
   const top = await db
     .prepare(
       `SELECT (SELECT COALESCE(MAX(id), 0) FROM bookings) AS maxId,
-              max((SELECT COALESCE(MAX(updated_at), '') FROM bookings), (SELECT COALESCE(MAX(updated_at), '') FROM waitlist)) AS stamp`,
+              max((SELECT COALESCE(MAX(updated_at), '') FROM bookings), (SELECT COALESCE(MAX(updated_at), '') FROM waitlist), (SELECT COALESCE(MAX(updated_at), '') FROM deposits)) AS stamp`,
     )
     .first<{ maxId: number; stamp: string }>();
   const fresh = since > 0
-    ? (await db.prepare(`SELECT ${PUBLIC_COLS} FROM bookings WHERE id > ?1 AND source = 'online' ORDER BY id LIMIT 20`).bind(since).all<Booking>()).results
+    ? (await db.prepare(`SELECT ${PUBLIC_COLS} FROM bookings WHERE id > ?1 AND source = 'online' AND id NOT IN (SELECT booking_id FROM deposits WHERE status = 'due' AND hold_until IS NOT NULL) ORDER BY id LIMIT 20`).bind(since).all<Booking>()).results
     : [];
   return { ok: true, maxId: Number(top?.maxId ?? 0), stamp: String(top?.stamp ?? ""), fresh };
 }

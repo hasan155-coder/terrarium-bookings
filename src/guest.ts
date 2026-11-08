@@ -7,6 +7,7 @@ import {
   PUBLIC_COLS, addDays, getSettings, londonNow, stamp,
 } from "./booking/core.server.ts";
 import { londonToUtc, longDate, reminderEmail, restaurantCancelledEmail, sendEmail, type Booked, type MailEnv } from "./email.ts";
+import { depositCancelLine, depositCancelNote } from "./payments.ts";
 
 export type GuestEnv = MailEnv & { BOOKINGS_URL?: string };
 
@@ -16,7 +17,7 @@ const REMIND_FROM = 10 * 60; // reminders go out from 10:00 the day before
 
 /* ------------------------------------------------------------ cancel links */
 
-async function linkSecret(db: DB): Promise<string> {
+export async function linkSecret(db: DB): Promise<string> {
   const row = await db.prepare("SELECT value FROM settings WHERE key = 'link_secret'").first<{ value: string }>();
   if (row?.value) return row.value;
   const fresh = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -30,7 +31,7 @@ async function sign(secret: string, ref: string, email: string): Promise<string>
   return [...new Uint8Array(mac)].slice(0, 16).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function sameText(a: string, b: string) {
+export function sameText(a: string, b: string) {
   if (a.length !== b.length) return false;
   let d = 0;
   for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
@@ -53,16 +54,17 @@ export async function cancelUrl(env: GuestEnv, db: DB, ref: string, email: unkno
   return `${base}/cancel?r=${encodeURIComponent(ref)}&t=${await sign(await linkSecret(db), ref, e)}`;
 }
 
-const asBooked = (b: Booking): Booked => ({
+export const asBooked = (b: Booking): Booked => ({
   ref: b.ref, date: b.date, time: b.time, guests: b.guests, first: b.first, last: b.last, email: b.email, phone: b.phone,
   occasion: b.occasion, notes: b.notes, newsletter: !!b.newsletter,
 });
 
 /* ------------------------------------------------------------- cancel page */
 
-const esc = (v: unknown) =>
+export const esc = (v: unknown) =>
   String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);
 
+// form-action allows Stripe because the deposit page's Pay button redirects there.
 const PAGE_HEADERS = {
   "Content-Type": "text/html; charset=utf-8",
   "Cache-Control": "no-store",
@@ -71,10 +73,10 @@ const PAGE_HEADERS = {
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
   "Content-Security-Policy":
-    "default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+    "default-src 'none'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; form-action 'self' https://checkout.stripe.com; base-uri 'none'; frame-ancestors 'none'",
 };
 
-function page(env: GuestEnv, o: { kicker: string; title: string; body: string; status?: number }) {
+export function page(env: GuestEnv, o: { kicker: string; title: string; body: string; status?: number }) {
   const site = env.PUBLIC_SITE || "";
   const html = `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#181713"><title>${esc(o.title.replace(/<[^>]+>/g, ""))} · Terrarium Bistro</title>
@@ -109,7 +111,7 @@ ${o.body}
   return new Response(html, { status: o.status ?? 200, headers: PAGE_HEADERS });
 }
 
-const details = (b: Booking) =>
+export const details = (b: Booking) =>
   `<dl><dt>Date</dt><dd>${esc(longDate(b.date))}</dd><dt>Time</dt><dd>${esc(b.time)}</dd><dt>Guests</dt><dd>${b.guests}</dd><dt>Name</dt><dd>${esc(`${b.first} ${b.last}`.trim())}</dd><dt>Reference</dt><dd class="ref">${esc(b.ref)}</dd></dl>`;
 
 /** GET shows the booking and a Cancel button; POST (the button) cancels it. A GET never cancels, so email link scanners are harmless. */
@@ -144,10 +146,11 @@ export async function cancelRoute(request: Request, env: GuestEnv, db: DB): Prom
     });
 
   if (request.method === "GET") {
+    const dep = await depositCancelNote(db, b).catch(() => "");
     return page(env, {
       kicker: "Cancel your table",
       title: `Cancel your table for <i>${b.guests}?</i>`,
-      body: `<p>If you can no longer make it, cancel below and we will offer the table to another guest. If you would rather change the time, call us on <a href="tel:${PHONE_INTL}">${PHONE}</a>.</p>${details(b)}
+      body: `<p>If you can no longer make it, cancel below and we will offer the table to another guest. If you would rather change the time, call us on <a href="tel:${PHONE_INTL}">${PHONE}</a>.</p>${dep ? `<p style="margin-top:12px;color:var(--gold-hi)">${esc(dep)}</p>` : ""}${details(b)}
 <form method="post" action="/cancel"><input type="hidden" name="r" value="${esc(b.ref)}"><input type="hidden" name="t" value="${esc(t)}">
 <button type="submit">Cancel my table</button>${env.PUBLIC_SITE ? `<a class="btn" href="${esc(env.PUBLIC_SITE)}">Keep my table</a>` : ""}</form>`,
     });
@@ -158,7 +161,7 @@ export async function cancelRoute(request: Request, env: GuestEnv, db: DB): Prom
     .bind(b.id, stamp())
     .run();
   if ((done.meta.changes ?? 0) > 0 && env.RESTAURANT_EMAIL) {
-    const m = restaurantCancelledEmail(asBooked(b), env.STAFF_URL);
+    const m = restaurantCancelledEmail(asBooked(b), env.STAFF_URL, await depositCancelLine(db, b).catch(() => ""));
     await sendEmail(env, { to: [env.RESTAURANT_EMAIL], subject: m.subject, html: m.html, text: m.text, reply_to: b.email }).catch(() => false);
   }
   return page(env, {

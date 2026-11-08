@@ -397,6 +397,37 @@ select.inp option{background:var(--ink-2)}
 .trow .inp{height:44px;font-size:.95rem;padding:0 10px}
 .trow button{height:40px;border-radius:10px;color:var(--mute)}
 .thead{display:grid;grid-template-columns:minmax(0,1fr) 84px minmax(0,1.4fr) 70px 40px;gap:6px;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:700}
+/* vouchers and deposits */
+.vlist{display:grid;gap:6px}
+.vrow{display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:14px;align-items:center;width:100%;text-align:left;padding:12px 14px;border-radius:12px;background:rgba(239,230,212,.03);border:1px solid var(--line-2)}
+.vrow:active{background:rgba(239,230,212,.07)}
+.vrow .amt{font-family:var(--f-d);font-size:1.7rem;line-height:1;color:var(--gold-hi);font-variant-numeric:lining-nums tabular-nums}
+.vrow .amt small{display:block;margin-top:4px;font-family:var(--f-b);font-size:.68rem;color:var(--mute)}
+.vrow .who{min-width:0}
+.vrow .who b{display:block;font-weight:700;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.vrow .who span{display:block;font-size:.82rem;color:var(--cream-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vhero{display:grid;gap:4px;padding:18px 20px;border-radius:16px;border:1px solid var(--gold-lo);background:linear-gradient(160deg,rgba(201,166,107,.16),rgba(201,166,107,.02) 70%)}
+.vhero .bal{font-family:var(--f-d);font-size:3.2rem;line-height:1;color:var(--gold-hi);font-variant-numeric:lining-nums tabular-nums}
+.money{display:flex;align-items:center;gap:6px;height:58px;padding-left:16px;border:1px solid var(--line-3);border-radius:12px;background:rgba(239,230,212,.04)}
+.money span{font-family:var(--f-d);font-size:1.7rem;color:var(--gold)}
+.money input{flex:1;min-width:0;height:100%;border:0;background:none;font-family:var(--f-d);font-size:1.8rem;color:var(--cream)}
+.money input:focus{outline:none}
+.money:focus-within{border-color:var(--gold)}
+.hist2{display:grid}
+.hist2>div{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--line-2);font-size:.88rem}
+.hist2>div:first-child{border-top:0}
+.hist2 .neg{color:var(--gold-hi);font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:6px}
+.hist2 .undone{opacity:.45}
+.hist2 .undone .neg{text-decoration:line-through}
+.mode{padding:10px 14px;border-radius:12px;font-size:.86rem;line-height:1.45}
+.mode--test{background:rgba(217,164,65,.12);border:1px solid rgba(217,164,65,.45);color:#f0d49d}
+.mode--off{background:rgba(201,120,107,.1);border:1px solid rgba(201,120,107,.45);color:#e6a093}
+.tag--paid{border-color:rgba(181,194,135,.5);color:var(--sage-hi);background:rgba(181,194,135,.12)}
+a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.big-ok{display:grid;gap:8px;justify-items:center;text-align:center;padding:10px 0 4px}
+.big-ok b{font-family:var(--f-d);font-weight:500;font-size:2.4rem;line-height:1;color:var(--gold-hi)}
+.big-ok span{font-weight:700;letter-spacing:.16em;font-size:1.1rem}
+@media (max-width:520px){.vrow{grid-template-columns:70px minmax(0,1fr)}.vrow .tag{grid-column:2;justify-self:start}}
 /* reports */
 .rtiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .rtile{padding:12px;border-radius:14px;background:rgba(239,230,212,.03);border:1px solid var(--line-2);display:grid;gap:2px}
@@ -446,6 +477,7 @@ select.inp option{background:var(--ink-2)}
   <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7"/></symbol>
   <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
   <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><path d="M4.5 11.5h15V21h-15zM3 7.5h18v4H3zM12 7.5V21"/><path d="M12 7.5C10.5 4 6.8 3.6 6.8 5.8 6.8 7.3 9 7.5 12 7.5c3 0 5.2-.2 5.2-1.7 0-2.2-3.7-1.8-5.2 1.7z"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
   <symbol id="i-sms" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
   <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14z"/><path d="M5 19l7-7"/></symbol>
@@ -489,6 +521,7 @@ select.inp option{background:var(--ink-2)}
     <div class="tools">
       <button class="ib" id="searchBtn" aria-label="Find a booking"><svg class="i"><use href="#i-search"/></svg></button>
       <button class="ib" id="repBtn" aria-label="Reports"><svg class="i"><use href="#i-chart"/></svg></button>
+      <button class="ib" id="vchBtn" aria-label="Gift vouchers"><svg class="i"><use href="#i-gift"/></svg></button>
       <button class="ib" id="bellBtn" aria-label="New online bookings"><svg class="i"><use href="#i-bell"/></svg><span class="badge" id="badge" hidden></span></button>
       <button class="ib" id="setBtn" aria-label="Settings"><svg class="i"><use href="#i-gear"/></svg></button>
     </div>
@@ -706,6 +739,11 @@ function card(b) {
   if (b.status === 'late') tags.push(`<span class="tag tag--running">Running late${late ? ` · ${late} min` : ''}</span>`);
   else if (late) tags.push(`<span class="tag tag--late">Late ${late} min</span>`);
   if (b.clash) tags.push(`<span class="tag tag--warn">Table clash</span>`);
+  const dp = depInfo(b);
+  if (dp && b.status !== 'cancelled') tags.push(dp.status === 'paid' ? `<span class="tag tag--paid">Deposit ${gbp(dp.pence)} paid</span>`
+    : dp.held ? `<span class="tag tag--warn">Paying deposit now</span>`
+    : dp.status === 'due' ? `<span class="tag tag--late">Deposit ${gbp(dp.pence)} due</span>`
+    : `<span class="tag">${dp.status === 'refunded' ? 'Deposit refunded' : 'No deposit'}</span>`);
   const g = b.guest;
   if (g && g.visits) tags.push(`<span class="tag tag--regular">${ordinal(g.visits + 1)} visit</span>`);
   if (g && g.noshows) tags.push(`<span class="tag tag--warn">${plural(g.noshows, 'no-show', 'no-shows')} before</span>`);
@@ -824,6 +862,7 @@ function openBooking(b) {
     kicker: `${b.time} · ${plural(b.guests, 'guest', 'guests')}`, title: esc(name),
     body: `<dl class="kv">${rows.map(([k, v, raw]) => `<dt>${k}</dt><dd>${raw ? v : esc(v)}</dd>`).join('')}</dl>
       <div class="acts">${acts.map(([s, l, c]) => `<button class="btn ${c}" data-status="${s}">${l}</button>`).join('')}<button class="btn btn--line" id="tblBtn">${b.table_no ? 'Change table' : 'Set table'}</button></div>
+      ${depSection(b)}
       <div class="sect" id="guestSect"><h3>Guest history</h3><p class="hint">Loading…</p></div>`,
     foot: `<button class="btn btn--line" id="editBtn">Edit details</button>`
   });
@@ -831,6 +870,7 @@ function openBooking(b) {
   $$('[data-status]', sh).forEach(x => x.addEventListener('click', async () => { closeSheet(); await update(b.id, { status: x.dataset.status }); }));
   $('#tblBtn', sh).addEventListener('click', () => openTable(b));
   $('#editBtn', sh).addEventListener('click', () => openForm(b));
+  wireDeposit(b, sh);
 }
 
 /* ---------- table picker */
@@ -1090,6 +1130,10 @@ async function openSettings() {
         <div class="row2 keep">${num('sDur', 'Table time (minutes)', s.duration, 'How long a table is held, for the seat count.', 15, 360)}${num('sMax', 'Largest party online', s.maxOnline, 'Bigger groups are asked to call.', 1, 50)}</div>
         <div class="row2 keep">${num('sAhead', 'Book up to (days ahead)', s.daysAhead, 'Furthest date guests can pick.', 1, 730)}${num('sNotice', 'Same-day notice (minutes)', s.minNotice, 'How close to a time guests can still book.', 0, 2880)}</div></div>
       <div class="sect"><h3>Reminders</h3><label class="switch"><span><b>Email a reminder the day before</b><span>Sent at 10am to guests booked for the next day, with a link to cancel if they can no longer come.</span></span><input type="checkbox" id="sRemind" ${s.reminders ? 'checked' : ''}></label></div>
+      <div class="sect"><h3>Deposits for big groups</h3>
+        <div class="row2 keep">${num('sDepFrom', 'Deposit from (guests)', s.depositFrom, 'Groups this size or bigger pay when they book. 0 turns deposits off.', 0, 200)}${num('sDepPer', '£ per guest', s.depositPerHead, 'Paid by card through Stripe.', 1, 200)}</div>
+        <div class="row2 keep">${num('sDepHrs', 'Refund rule (hours)', s.depositHours, 'Cancel at least this long before and the deposit is refunded.', 0, 720)}<div></div></div>
+        <span class="hint">To let bigger groups book on the website, raise "Largest party online" above too. Smaller online limits send big groups to the phone, and you can text them a pay link from their booking.</span></div>
       <div class="sect"><h3>Tables</h3><div class="thead"><span>Table</span><span>Seats</span><span>Area</span><span>Join</span><span></span></div><div class="trows" id="sTables">${(s.tables || []).map(tableRow).join('')}</div>
         <button type="button" class="btn btn--line btn--sm" id="sAddTable" style="justify-self:start">${icon('plus')}Add a table</button>
         <span class="hint">New bookings get the smallest free table that fits. Tables with the same join letter can be pushed together for bigger groups; leave it blank for tables that can't move. Clear every row to stop giving tables automatically.</span></div>
@@ -1132,6 +1176,7 @@ async function openSettings() {
       maxOnline: +$('#sMax', sh).value, daysAhead: +$('#sAhead', sh).value, minNotice: +$('#sNotice', sh).value,
       closedWeekdays: $$('#sWk [aria-pressed="true"]', sh).map(b => +b.dataset.d), services,
       reminders: $('#sRemind', sh).checked,
+      depositFrom: +$('#sDepFrom', sh).value, depositPerHead: +$('#sDepPer', sh).value, depositHours: +$('#sDepHrs', sh).value,
       tables: $$('#sTables .trow', sh).map(r => { const [n, st, a, j] = $$('input', r); return { name: n.value.trim(), seats: +st.value || 0, area: a.value.trim(), join: j.value.trim() }; }).filter(t => t.name && t.seats > 0)
     };
     const r = await api('settings', { settings }).catch(() => null);
@@ -1345,6 +1390,199 @@ async function openReport() {
   draw();
 }
 $('#repBtn').addEventListener('click', openReport);
+
+/* =================================================================== vouchers */
+const gbp = p => '£' + (p / 100).toFixed(p % 100 ? 2 : 0);
+const shortD = iso => fmt(String(iso).slice(0, 10), { day: 'numeric', month: 'short' });
+const vState = v => v.status === 'pending' ? ['Awaiting payment', 'tag--late'] : v.status === 'void' ? ['Cancelled', 'tag--state'] : v.status === 'used' ? ['Spent', ''] : v.expired ? ['Expired', 'tag--warn'] : v.balance < v.amount ? ['Part used', 'tag--regular'] : ['Ready to use', 'tag--paid'];
+const modeNote = m => m === 'test' ? '<p class="mode mode--test"><b>Test mode.</b> Online card payments use Stripe test keys, so no real money moves yet.</p>'
+  : m === 'off' ? '<p class="mode mode--off"><b>Card payments are off.</b> The website cannot take payments until the Stripe key is added. You can still sell vouchers here.</p>' : '';
+
+function askSure({ kicker = '', title, text, yes, danger }, fn) {
+  const sh = openSheet({ kicker, title, body: `<div class="warn"><b>${esc(text)}</b></div>`, foot: `<button class="btn btn--ghost" data-close>Go back</button><button class="btn ${danger ? 'btn--danger' : 'btn--gold'}" id="sureYes">${esc(yes)}</button>` });
+  $('#sureYes', sh).addEventListener('click', () => { sheetClose = null; closeSheet(); fn(); });
+}
+
+function vRow(v) {
+  const [l, c] = vState(v);
+  return `<button type="button" class="vrow" data-v="${v.id}"><span class="amt">${gbp(v.balance)}<small>of ${gbp(v.amount)}</small></span>
+    <span class="who"><b>${esc(v.serial)}</b><span>For ${esc(v.to_name || 'someone')}${v.from_name ? ' · from ' + esc(v.from_name) : ''}${v.paid_at ? ' · ' + shortD(v.paid_at) : ''}</span></span>
+    <span class="tag ${c}">${l}</span></button>`;
+}
+
+async function openVouchers() {
+  const sh = openSheet({
+    kicker: 'Terrarium Bistro', title: 'Gift vouchers',
+    body: `<div id="vMode"></div><div class="rtiles" id="vTot" style="grid-template-columns:repeat(2,minmax(0,1fr))"></div>
+      <input class="inp" id="vQ" placeholder="Voucher number or name" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="characters" enterkeyhint="search">
+      <div class="vlist" id="vList"><p class="hint">Loading…</p></div>`,
+    foot: `<button class="btn btn--ghost" data-close>Close</button><button class="btn btn--gold" id="vSell">${icon('plus')}Sell a voucher</button>`
+  });
+  let timer, req = 0, last = [];
+  async function draw() {
+    const my = ++req, q = $('#vQ', sh).value.trim();
+    const r = await api('vouchers?q=' + encodeURIComponent(q)).catch(() => null);
+    if (my !== req || !sh.isConnected || !$('#vList', sh)) return;
+    if (!r || !r.ok) { $('#vList', sh).innerHTML = '<p class="hint">Could not load the vouchers.</p>'; return; }
+    last = r.vouchers;
+    $('#vMode', sh).innerHTML = modeNote(r.payments);
+    const T = r.totals;
+    $('#vTot', sh).innerHTML = `<div class="rtile"><small>Still to spend</small><b>${gbp(T.outstanding)}</b><i>on ${plural(T.live, 'voucher', 'vouchers')} in date</i></div><div class="rtile"><small>Sold this month</small><b>${gbp(T.soldMonth)}</b><i>${plural(T.soldMonthCount, 'voucher', 'vouchers')}</i></div>`;
+    $('#vList', sh).innerHTML = last.length ? last.map(vRow).join('') : `<p class="hint">${q ? 'No voucher matches. Check the number printed on it, or search by the name it is for.' : 'No vouchers yet. Ones bought on the website appear here straight away.'}</p>`;
+  }
+  $('#vQ', sh).addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(draw, 250); });
+  $('#vQ', sh).addEventListener('keydown', e => { if (e.key === 'Enter' && last.length === 1) openVoucher(last[0].id); });
+  $('#vList', sh).addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) openVoucher(+b.dataset.v); });
+  $('#vSell', sh).addEventListener('click', openSell);
+  draw();
+}
+
+async function openVoucher(id) {
+  const r = await api('voucher?id=' + id).catch(() => null);
+  if (!r || !r.ok) { toast('Could not open the voucher', (r && r.message) || ''); return; }
+  const v = r.voucher, [l, c] = vState(v), live = v.status === 'active';
+  const how = v.source === 'online' ? 'on the website, by card' : `${v.source === 'phone' ? 'by phone' : 'at the bar'}${v.paid_by ? ', ' + v.paid_by : ''}`;
+  const rows = [
+    ['For', v.to_name || '—'], ['From', v.from_name || '—'], ['Message', v.message || '—'],
+    ['Bought', v.paid_at ? `${fmt(v.paid_at.slice(0, 10), { day: 'numeric', month: 'short', year: 'numeric' })} · ${how}` : 'Not paid yet'],
+    ['Buyer', v.buyer_email || '—'],
+    ['Delivery', v.deliver === 'recipient' ? `Email to ${v.recipient_email} · ${v.sent_at ? 'sent' : 'goes out ' + shortD(v.send_on)}` : v.deliver === 'buyer' ? `Emailed to the buyer${v.sent_at ? '' : ' (not sent yet)'}` : 'Handed over in person'],
+    ['Valid until', v.expires_on ? fmt(v.expires_on, { day: 'numeric', month: 'long', year: 'numeric' }) + (v.expired ? ' · expired' : '') : '—'],
+    ...(v.note ? [['Note', v.note]] : [])];
+  const canUndo = ['active', 'used'].includes(v.status);
+  const hist = r.uses.length ? `<div class="hist2">${r.uses.map(u => `<div class="${u.undone ? 'undone' : ''}"><span>${shortD(u.created_at)} ${new Date(u.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' })}</span><span>${esc(u.note || 'Taken off the bill')}${u.undone ? ' · undone' : ''}</span><span class="neg">−${gbp(u.amount)}${!u.undone && canUndo ? `<button type="button" class="btn btn--ghost btn--sm" data-undo="${u.id}">Undo</button>` : ''}</span></div>`).join('')}</div>` : '<p class="hint">Not used yet.</p>';
+  const sh = openSheet({
+    kicker: 'Gift voucher', title: esc(v.serial),
+    body: `<div class="vhero"><span class="tag ${c}" style="justify-self:start">${l}</span><span class="bal">${gbp(v.balance)}</span><span class="hint">left of ${gbp(v.amount)}</span></div>
+      ${live ? `<div class="sect"><h3>Take it off the bill</h3>
+        ${v.expired ? `<div class="warn"><b>This voucher ran out on ${fmt(v.expires_on, { day: 'numeric', month: 'long', year: 'numeric' })}.</b><span>You can still accept it if you choose to.</span></div>` : ''}
+        <div class="money"><span>£</span><input id="uAmt" inputmode="decimal" placeholder="0.00" autocomplete="off" aria-label="Amount to take off"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="chip" id="uAll">Whole balance · ${gbp(v.balance)}</button></div>
+        <input class="inp" id="uNote" maxlength="120" placeholder="Table or bill number (optional)" autocomplete="off">
+        <button type="button" class="btn btn--gold" id="uGo">Take it off</button><p class="err" id="uErr"></p></div>` : ''}
+      <dl class="kv">${rows.map(([k, x]) => `<dt>${k}</dt><dd>${esc(x)}</dd>`).join('')}</dl>
+      <div class="sect"><h3>Spent so far</h3>${hist}</div>`,
+    foot: `<a class="btn btn--line" href="${esc(r.link)}" target="_blank" rel="noopener">Open to print</a>${canUndo ? `<button class="btn btn--line" id="vResend">Email it</button>` : ''}${['active', 'pending'].includes(v.status) ? `<button class="btn btn--danger" id="vVoid">Cancel voucher</button>` : ''}`
+  });
+  const spend = async force => {
+    const err = $('#uErr', sh), amount = $('#uAmt', sh).value.trim();
+    err.textContent = '';
+    if (!(+amount.replace(/[£,\s]/g, '') > 0)) { err.textContent = 'Enter the amount to take off.'; $('#uAmt', sh).focus(); return; }
+    const res = await api('voucher-use', { id, amount, note: $('#uNote', sh).value.trim(), force }).catch(() => null);
+    if (res && res.ok) { toast(`${gbp(Math.round(+amount.replace(/[£,\s]/g, '') * 100))} taken off`, res.status === 'used' ? 'The voucher is now spent in full.' : `${gbp(res.balance)} left on ${v.serial}.`, 4000); openVoucher(id); return; }
+    if (res && res.code === 'expired') {
+      const note = $('#uNote', sh).value.trim();
+      askSure({ kicker: v.serial, title: 'Accept an expired voucher?', text: res.message, yes: 'Accept it anyway' }, async () => {
+        const x = await api('voucher-use', { id, amount, note, force: true }).catch(() => null);
+        if (x && x.ok) { toast('Taken off', x.status === 'used' ? 'The voucher is now spent in full.' : `${gbp(x.balance)} left on ${v.serial}.`, 4000); openVoucher(id); }
+        else toast('Not taken off', (x && x.message) || '');
+      });
+      return;
+    }
+    err.textContent = (res && res.message) || 'Could not take it off. Try again.';
+  };
+  if (live) {
+    $('#uAll', sh).addEventListener('click', () => { $('#uAmt', sh).value = (v.balance / 100).toFixed(2); });
+    $('#uGo', sh).addEventListener('click', () => spend(false));
+    $('#uAmt', sh).addEventListener('keydown', e => { if (e.key === 'Enter') spend(false); });
+  }
+  $$('[data-undo]', sh).forEach(x => x.addEventListener('click', async () => {
+    const res = await api('voucher-undo', { use_id: +x.dataset.undo }).catch(() => null);
+    if (res && res.ok) { toast('Put back', 'The amount is back on the voucher.', 3000); openVoucher(id); } else toast('Could not undo', (res && res.message) || '');
+  }));
+  const vv = $('#vVoid', sh);
+  if (vv) vv.addEventListener('click', () => askSure({ kicker: v.serial, title: 'Cancel this voucher?', text: `It can no longer be spent. ${v.source === 'online' ? 'If you are refunding the buyer, do that in Stripe as well.' : ''}`, yes: 'Cancel voucher', danger: true }, async () => {
+    const res = await api('voucher-void', { id }).catch(() => null);
+    if (res && res.ok) { toast('Voucher cancelled', v.serial, 3000); openVoucher(id); } else toast('Not cancelled', (res && res.message) || '');
+  }));
+  const rs = $('#vResend', sh);
+  if (rs) rs.addEventListener('click', () => {
+    const cur = v.deliver === 'recipient' ? v.recipient_email : v.buyer_email;
+    const s2 = openSheet({ kicker: v.serial, title: 'Email the voucher', body: `<div class="field"><span class="lbl">Send it to</span><input class="inp" id="rsTo" type="email" value="${esc(cur)}" placeholder="name@example.com" autocomplete="off"></div><p class="err" id="rsErr"></p>`, foot: `<button class="btn btn--ghost" data-close>Back</button><button class="btn btn--gold" id="rsGo">Send</button>` });
+    $('#rsGo', s2).addEventListener('click', async () => {
+      const to = $('#rsTo', s2).value.trim();
+      const res = await api('voucher-resend', { id, email: to === cur && v.deliver === 'buyer' ? '' : to }).catch(() => null);
+      if (res && res.ok) { toast('Voucher emailed', res.to, 3000); openVoucher(id); } else $('#rsErr', s2).textContent = (res && res.message) || 'Could not send it.';
+    });
+  });
+}
+
+function openSell() {
+  const amounts = [25, 50, 75, 100, 150, 200];
+  let amount = 50, paid = 'card', where = 'bar', give = 'none';
+  const seg = (id, opts, cur) => `<div class="seg" id="${id}">${opts.map(([k, l]) => `<button type="button" data-k="${k}" aria-pressed="${k === cur}">${l}</button>`).join('')}</div>`;
+  const sh = openSheet({
+    kicker: 'Gift vouchers', title: 'Sell a voucher',
+    body: `<div class="field"><span class="lbl">Value</span><div class="chips" id="sAmts">${amounts.map(a => `<button type="button" class="chip" data-a="${a}" aria-pressed="${a === amount}">£${a}</button>`).join('')}</div>
+        <div class="money"><span>£</span><input id="sAmt" inputmode="numeric" placeholder="Or another amount, £10 to £500" autocomplete="off"></div></div>
+      <div class="row2"><div class="field"><span class="lbl">For</span><input class="inp" id="sTo" maxlength="28" placeholder="Their name" autocomplete="off"></div><div class="field"><span class="lbl">From</span><input class="inp" id="sFrom" maxlength="28" placeholder="Buyer's name" autocomplete="off"></div></div>
+      <div class="field"><span class="lbl">Message (optional)</span><input class="inp" id="sMsg" maxlength="120" placeholder="Happy birthday" autocomplete="off"></div>
+      <div class="field"><span class="lbl">Paid by</span>${seg('sPaid', [['card', 'Card'], ['cash', 'Cash']], paid)}</div>
+      <div class="field"><span class="lbl">Sold</span>${seg('sWhere', [['bar', 'At the bar'], ['phone', 'By phone']], where)}</div>
+      <div class="field"><span class="lbl">How they get it</span>${seg('sGive', [['none', 'Print it here'], ['buyer', 'Email the buyer'], ['recipient', 'Email them']], give)}</div>
+      <div class="field" id="sBuyerWrap" hidden><span class="lbl">Buyer's email</span><input class="inp" id="sBuyer" type="email" placeholder="name@example.com" autocomplete="off"></div>
+      <div class="field" id="sRecWrap" hidden><span class="lbl">Their email</span><input class="inp" id="sRec" type="email" placeholder="name@example.com" autocomplete="off"></div>
+      <p class="hint">Take the payment on the card machine or till first. The voucher is live as soon as you create it, valid for 12 months.</p><p class="err" id="sErr2"></p>`,
+    foot: `<button class="btn btn--ghost" data-close>Cancel</button><button class="btn btn--gold" id="sGo">Create £50 voucher</button>`
+  });
+  const label = () => { $('#sGo', sh).textContent = `Create £${amount} voucher`; };
+  const pick = (id, set) => $('#' + id, sh).addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; $$('#' + id + ' button', sh).forEach(x => x.setAttribute('aria-pressed', String(x === b))); set(b.dataset.k); });
+  $('#sAmts', sh).addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; amount = +b.dataset.a; $('#sAmt', sh).value = ''; $$('#sAmts .chip', sh).forEach(x => x.setAttribute('aria-pressed', String(x === b))); label(); });
+  $('#sAmt', sh).addEventListener('input', e => { const n = parseInt(e.target.value.replace(/\D/g, ''), 10); if (n) { amount = n; $$('#sAmts .chip', sh).forEach(x => x.setAttribute('aria-pressed', 'false')); label(); } });
+  pick('sPaid', k => paid = k); pick('sWhere', k => where = k);
+  pick('sGive', k => { give = k; $('#sBuyerWrap', sh).hidden = !(k === 'buyer' || k === 'recipient'); $('#sRecWrap', sh).hidden = k !== 'recipient'; });
+  $('#sGo', sh).addEventListener('click', async () => {
+    const err = $('#sErr2', sh); err.textContent = '';
+    if (amount < 10 || amount > 500) { err.textContent = 'Choose an amount between £10 and £500.'; return; }
+    const res = await api('voucher-sell', { amount, to: $('#sTo', sh).value.trim(), from: $('#sFrom', sh).value.trim(), message: $('#sMsg', sh).value.trim(), paid_by: paid, source: where, deliver: give, buyer_email: $('#sBuyer', sh).value.trim(), recipient_email: $('#sRec', sh).value.trim() }).catch(() => null);
+    if (!res || !res.ok) { err.textContent = (res && res.message) || 'Could not create the voucher.'; return; }
+    const v = res.voucher;
+    const done = openSheet({
+      kicker: 'Voucher created', title: 'Ready to give',
+      body: `<div class="big-ok"><b>${gbp(v.amount)}</b><span>${esc(v.serial)}</span><p class="hint">${give === 'none' ? 'Open it to print, or write this number on a card.' : res.emailed ? 'Emailed. You can also print it.' : 'It could not be emailed just now. Open it to print, or try Email it from the voucher.'} Valid until ${fmt(v.expires_on, { day: 'numeric', month: 'long', year: 'numeric' })}.</p></div>`,
+      foot: `<button class="btn btn--ghost" data-close>Done</button><a class="btn btn--gold" href="${esc(res.link)}" target="_blank" rel="noopener">Open to print</a>`
+    });
+  });
+}
+$('#vchBtn').addEventListener('click', openVouchers);
+
+/* =================================================================== deposits */
+function depInfo(b) {
+  const s = (S.day && S.day.settings) || {}, d = b.deposit;
+  const need = s.depositFrom > 0 && b.guests >= s.depositFrom;
+  if (!d && !need) return null;
+  return { pence: d ? d.pence : b.guests * (s.depositPerHead || 10) * 100, status: d ? d.status : 'due', held: !!(d && d.held) };
+}
+function depSection(b) {
+  const d = depInfo(b); if (!d || b.status === 'cancelled' && d.status !== 'paid') return '';
+  const off = S.day && S.day.payments === 'off';
+  const text = d.status === 'paid' ? 'Paid by card. Take it off their bill on the night.'
+    : d.held ? 'They are paying on the website now. The table is held for up to 30 minutes, then released if they do not pay.'
+    : d.status === 'due' ? (off ? 'Not paid yet. Card payments are off online, so take it on the card machine and mark it paid.' : 'Not paid yet. Send them the pay link by text or email, or take it on the card machine.')
+    : d.status === 'refunded' ? 'Marked as refunded.' : 'No deposit is being taken for this booking.';
+  const btn = (k, l, c = 'btn--line') => `<button type="button" class="btn ${c}" data-dep="${k}">${l}</button>`;
+  const acts = d.status === 'paid' ? [btn('refunded', 'Mark refunded')]
+    : d.status === 'due' && !d.held ? [...(!off && b.phone ? [btn('sms', 'Text the pay link', 'btn--gold')] : []), ...(!off && b.email ? [btn('email', 'Email the pay link')] : []), ...(!off ? [btn('copy', 'Copy the link')] : []), btn('paid', 'Paid on card machine'), btn('waived', 'No deposit')]
+    : d.status === 'due' ? [] : [btn('due', 'Ask for a deposit')];
+  return `<div class="sect" id="depSect"><h3>Deposit · ${gbp(d.pence)}</h3><p class="hint">${text}</p>${acts.length ? `<div class="acts">${acts.join('')}</div>` : ''}</div>`;
+}
+function wireDeposit(b, sh) {
+  $$('[data-dep]', sh).forEach(x => x.addEventListener('click', async () => {
+    const k = x.dataset.dep;
+    if (['paid', 'waived', 'refunded', 'due'].includes(k)) {
+      const res = await api('deposit-set', { id: b.id, status: k }).catch(() => null);
+      if (res && res.ok) { toast({ paid: 'Deposit marked paid', waived: 'No deposit on this booking', refunded: 'Deposit marked refunded', due: 'Deposit asked for' }[k], `${b.first} ${b.last}`.trim(), 3000); closeSheet(); loadDay(true); }
+      else toast('Not saved', (res && res.message) || '');
+      return;
+    }
+    const res = await api('deposit-link', { id: b.id, send: k === 'email' ? 'email' : 'none' }).catch(() => null);
+    if (!res || !res.ok) { toast('Could not make the link', (res && res.message) || ''); return; }
+    if (k === 'email') { toast('Pay link emailed', b.email, 3000); return; }
+    if (k === 'copy') { try { await navigator.clipboard.writeText(res.url); toast('Link copied', 'Paste it into a text or WhatsApp.', 3000); } catch { prompt('Copy this link', res.url); } return; }
+    const n = String(b.phone || '').replace(/[^\d+]/g, '');
+    location.href = `sms:${n}?&body=${encodeURIComponent(`Hi ${b.first}, thank you for booking a table for ${b.guests} at Terrarium Bistro on ${fmt(b.date, { weekday: 'long', day: 'numeric', month: 'long' })} at ${b.time}. To secure it, please pay the ${gbp(res.pence)} deposit here: ${res.url}`)}`;
+  }));
+}
 
 /* =================================================================== alerts */
 function badge() { const b = $('#badge'); b.hidden = !S.unseen; b.textContent = S.unseen > 9 ? '9+' : S.unseen; }

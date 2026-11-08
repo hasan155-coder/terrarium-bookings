@@ -5,6 +5,7 @@ import * as core from "./core.server.ts";
 import * as auth from "./auth.server.ts";
 import * as extras from "./extras.server.ts";
 import type { DB, Row } from "./core.server.ts";
+import * as pay from "../payments.ts";
 
 const BASE_HEADERS = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
 const CORS: Record<string, string> = {
@@ -32,6 +33,8 @@ const ipOf = (r: Request) =>
 const actionOf = (request: Request, prefix: string) =>
   new URL(request.url).pathname.slice(prefix.length).replace(/^\/+|\/+$/g, "");
 
+const stripeModeOf = (env: pay.PayEnv) => (!env.STRIPE_SECRET_KEY ? "off" : /^(sk|rk)_test_/.test(env.STRIPE_SECRET_KEY) ? "test" : "live");
+
 /* ---------------------------------------------------------------- public */
 
 export async function handlePublic(request: Request, db: DB | undefined): Promise<Response> {
@@ -58,7 +61,7 @@ export async function handlePublic(request: Request, db: DB | undefined): Promis
 
 /* ----------------------------------------------------------------- staff */
 
-export async function handleStaff(request: Request, db: DB | undefined): Promise<Response> {
+export async function handleStaff(request: Request, db: DB | undefined, env: pay.PayEnv = {}): Promise<Response> {
   if (!db) return json({ ok: false, code: "offline", message: "The bookings database is not connected yet." }, 503);
   const url = new URL(request.url);
   const action = actionOf(request, "/api/staff");
@@ -106,8 +109,9 @@ export async function handleStaff(request: Request, db: DB | undefined): Promise
           const date = q.get("date") ?? core.londonNow().date;
           if (!core.isDate(date)) return json({ ok: false, code: "bad_date" }, 400);
           const day = await core.staffDay(db, date);
-          const [bookings, waitlist] = await Promise.all([extras.withHistory(db, day.bookings), extras.dayWaitlist(db, date)]);
-          return json({ ...day, bookings, waitlist });
+          await pay.releaseLapsedHolds(env, db).catch(() => 0);
+          const [bookings, waitlist] = await Promise.all([extras.withHistory(db, day.bookings).then((b) => pay.withDeposits(db, b)), extras.dayWaitlist(db, date)]);
+          return json({ ...day, bookings, waitlist, payments: stripeModeOf(env) });
         }
         case "range": {
           const from = q.get("from") ?? core.londonNow().date;
@@ -127,6 +131,10 @@ export async function handleStaff(request: Request, db: DB | undefined): Promise
           return out(await extras.staffGuest(db, Number(q.get("id"))));
         case "report":
           return json(await extras.staffReport(db, q.get("from"), q.get("to")));
+        case "vouchers":
+          return json(await pay.staffVouchers(env, db, q));
+        case "voucher":
+          return out(await pay.staffVoucher(env, db, Number(q.get("id"))));
       }
     }
     if (post) {
@@ -148,6 +156,20 @@ export async function handleStaff(request: Request, db: DB | undefined): Promise
           return out(await extras.staffWaitAdd(db, body));
         case "wait-update":
           return out(await extras.staffWaitUpdate(db, body));
+        case "voucher-use":
+          return out(await pay.staffVoucherUse(db, body));
+        case "voucher-undo":
+          return out(await pay.staffVoucherUndo(db, body));
+        case "voucher-void":
+          return out(await pay.staffVoucherVoid(db, body));
+        case "voucher-sell":
+          return out(await pay.staffVoucherSell(env, db, body));
+        case "voucher-resend":
+          return out(await pay.staffVoucherResend(env, db, body));
+        case "deposit-link":
+          return out(await pay.staffDepositLink(env, db, body));
+        case "deposit-set":
+          return out(await pay.staffDepositSet(db, body));
         case "settings":
           return json({ ok: true, settings: await core.saveSettings(db, body.settings ?? body) });
         case "passcode": {
