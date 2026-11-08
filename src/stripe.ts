@@ -81,6 +81,8 @@ export function createCheckout(env: StripeEnv, c: CheckoutInput): Promise<Sessio
   const mins = Math.min(1440, Math.max(31, Math.round(c.expiresInMin ?? 60)));
   return call<Session>(env, "POST", "/v1/checkout/sessions", {
     mode: "payment",
+    // Cards (Apple Pay and Google Pay come with them), so the page opens without extra Stripe settings.
+    payment_method_types: ["card"],
     locale: "en-GB",
     submit_type: "pay",
     customer_email: c.email || undefined,
