@@ -15,6 +15,7 @@ import { sendBookingEmails } from "./email.ts";
 import { cancelRoute, cancelUrl, sendReminders } from "./guest.ts";
 import * as pay from "./payments.ts";
 import { stripeMode, stripeOn } from "./stripe.ts";
+import { withKeys } from "./keys.ts";
 
 interface D1 extends DB {
   batch(statements: Stmt[]): Promise<unknown>;
@@ -84,8 +85,10 @@ async function book(request: Request, env: Env): Promise<Response> {
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, raw: Env): Promise<Response> {
     const path = new URL(request.url).pathname;
+    // Keys pasted in on the tablet fill in for Cloudflare secrets that are not set.
+    const env = path === "/robots.txt" || path === "/staff" || path === "/staff/" ? raw : await withKeys(raw, raw.DB);
     if (path === "/robots.txt") return new Response("User-agent: *\nDisallow: /\n", { headers: { "Content-Type": "text/plain" } });
     if (path === "/staff" || path === "/staff/") return new Response(staffPage, { headers: STAFF_HEADERS });
     if (path.startsWith("/api/public") || path.startsWith("/api/staff")) {
@@ -150,8 +153,9 @@ export default {
   },
 
   // Hourly (see "triggers" in wrangler.jsonc): reminders, payment checks and scheduled vouchers.
-  async scheduled(_event: unknown, env: Env, ctx: Ctx): Promise<void> {
-    if (!env.DB) return;
+  async scheduled(_event: unknown, raw: Env, ctx: Ctx): Promise<void> {
+    if (!raw.DB) return;
+    const env = await withKeys(raw, raw.DB);
     ctx.waitUntil(
       (async () => {
         await ensureSchema(env.DB);

@@ -1144,6 +1144,14 @@ async function openSettings() {
         <label class="switch"><span><b>Chime for new online bookings</b><span>Plays when a booking arrives from the website.</span></span><input type="checkbox" id="pSound" ${S.prefs.sound ? 'checked' : ''}></label>
         <label class="switch"><span><b>Keep screen awake</b><span>Stops the tablet going to sleep while this page is open.</span></span><input type="checkbox" id="pAwake" ${S.prefs.awake ? 'checked' : ''}></label>
         <button type="button" class="btn btn--line btn--sm" id="pTest" style="justify-self:start">Test the chime</button></div>
+      <div class="sect" id="kSect"><h3>Payment and email keys</h3>
+        <div class="kv" id="kStat"><dt>Card payments</dt><dd>Checking…</dd><dt>Emails</dt><dd>Checking…</dd></div>
+        <div class="field"><span class="lbl">Stripe key (card payments)</span><input class="inp" id="kStripe" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Paste the rk_live_… key"></div>
+        <div class="field"><span class="lbl">Resend key (emails)</span><input class="inp" id="kResend" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Paste the re_… key"></div>
+        <div class="field"><span class="lbl">Staff passcode, to confirm</span><input class="inp" id="kPass" type="password" autocomplete="current-password"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn btn--gold btn--sm" id="kSave">Save keys</button><button type="button" class="btn btn--danger btn--sm" id="kOff" hidden>Switch card payments off</button></div>
+        <p class="hint">Paste each key once. It is kept inside the booking system and never shown again, not even here. Changing a key needs the staff passcode, and info@terrariumbistro.co.uk gets an email when it happens.</p>
+        <p class="err" id="kErr"></p></div>
       <div class="sect"><h3>Staff passcode</h3>
         <div class="row2"><input class="inp" type="password" id="pc1" placeholder="Current passcode" autocomplete="current-password"><input class="inp" type="password" id="pc2" placeholder="New passcode" autocomplete="new-password"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn btn--line btn--sm" id="pcSave">Change passcode</button><button type="button" class="btn btn--line btn--sm" id="outOthers">Sign out other devices</button><button type="button" class="btn btn--danger btn--sm" id="outMe">Sign out this tablet</button></div>
@@ -1159,6 +1167,29 @@ async function openSettings() {
   $('#pSound', sh).addEventListener('change', e => { S.prefs.sound = e.target.checked; store.set('prefs', S.prefs); });
   $('#pAwake', sh).addEventListener('change', e => { S.prefs.awake = e.target.checked; store.set('prefs', S.prefs); e.target.checked ? wake() : sleepOk(); });
   $('#pTest', sh).addEventListener('click', () => { unlockAudio(); chime(true); });
+  const keyLine = k => {
+    const st = k.stripe, em = k.email, where = src => src === 'cloudflare' ? 'set in Cloudflare' : 'saved here';
+    $('#kStat', sh).innerHTML = `<dt>Card payments</dt><dd>${st.set ? `${st.mode === 'live' ? '<b style="color:var(--sage-hi)">On, taking real payments</b>' : '<b style="color:var(--amber)">Test mode, no real money</b>'} · key ending ${esc(st.ends)} · ${where(st.source)}` : '<b style="color:#e6a093">Off.</b> Paste the Stripe key below to switch them on.'}</dd>
+      <dt>Emails</dt><dd>${em.set ? `<b style="color:var(--sage-hi)">On</b> · key ending ${esc(em.ends)} · ${where(em.source)}` : '<b style="color:#e6a093">Off.</b> Guests get no confirmation emails until the Resend key is pasted below.'}</dd>`;
+    $('#kOff', sh).hidden = !(st.set && st.source === 'tablet');
+  };
+  api('keys').then(r => { if (r && r.ok && sh.isConnected) keyLine(r.keys); }).catch(() => {});
+  const saveKeys = async body => {
+    const err = $('#kErr', sh); err.textContent = '';
+    if (!$('#kPass', sh).value) { err.textContent = 'Enter the staff passcode to confirm.'; $('#kPass', sh).focus(); return; }
+    const btn = $('#kSave', sh); btn.disabled = true; btn.textContent = 'Checking…';
+    const r = await api('keys', { ...body, passcode: $('#kPass', sh).value }).catch(() => null);
+    btn.disabled = false; btn.textContent = 'Save keys';
+    if (r && r.ok) { $('#kStripe', sh).value = $('#kResend', sh).value = $('#kPass', sh).value = ''; keyLine(r.keys); toast('Keys saved', r.keys.stripe.set ? `Card payments are ${r.keys.stripe.mode === 'live' ? 'on' : 'in test mode'}.` : 'Card payments are off.', 4000); }
+    else err.textContent = (r && r.message) || 'Could not save the keys.';
+  };
+  $('#kSave', sh).addEventListener('click', () => {
+    const body = {}, st = $('#kStripe', sh).value.replace(/\s+/g, ''), re = $('#kResend', sh).value.replace(/\s+/g, '');
+    if (st) body.stripe = st; if (re) body.resend = re;
+    if (!st && !re) { $('#kErr', sh).textContent = 'Paste a key first.'; return; }
+    saveKeys(body);
+  });
+  $('#kOff', sh).addEventListener('click', () => saveKeys({ stripe: '' }));
   $('#pcSave', sh).addEventListener('click', async () => {
     const err = $('#pcErr', sh); err.textContent = '';
     const r = await api('passcode', { current: $('#pc1', sh).value, next: $('#pc2', sh).value }).catch(() => null);

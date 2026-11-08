@@ -21,7 +21,9 @@ The booking system behind the table form on the Terrarium Bistro website.
 
 Settings such as covers per time slot, seats, table time, tables and closed days are changed from the staff dashboard, not here. New database tables are created automatically on the first request after an update.
 
-## Secrets (added in the Cloudflare dashboard, never stored here)
+## Secrets (never stored in this repository)
+
+Either add them in the Cloudflare dashboard, or paste them on the tablet under Settings, then Payment and email keys (needs the staff passcode; info@ is emailed on every change). A key set in Cloudflare always wins.
 
 - `RESEND_API_KEY`: sends the emails.
 - `STRIPE_SECRET_KEY`: switches card payments on. A test key (`sk_test_...`) keeps the website's payment buttons hidden from guests: open the site with `?testpay=1` to try it with Stripe's test card. Swap in the live key (`sk_live_...`) to take real payments.

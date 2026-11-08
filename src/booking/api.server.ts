@@ -6,6 +6,7 @@ import * as auth from "./auth.server.ts";
 import * as extras from "./extras.server.ts";
 import type { DB, Row } from "./core.server.ts";
 import * as pay from "../payments.ts";
+import { keyStatus, saveKeys } from "../keys.ts";
 
 const BASE_HEADERS = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
 const CORS: Record<string, string> = {
@@ -131,6 +132,8 @@ export async function handleStaff(request: Request, db: DB | undefined, env: pay
           return out(await extras.staffGuest(db, Number(q.get("id"))));
         case "report":
           return json(await extras.staffReport(db, q.get("from"), q.get("to")));
+        case "keys":
+          return json({ ok: true, keys: keyStatus(env) });
         case "vouchers":
           return json(await pay.staffVouchers(env, db, q));
         case "voucher":
@@ -170,6 +173,8 @@ export async function handleStaff(request: Request, db: DB | undefined, env: pay
           return out(await pay.staffDepositLink(env, db, body));
         case "deposit-set":
           return out(await pay.staffDepositSet(db, body));
+        case "keys":
+          return out(await saveKeys(env, db, body, ipOf(request)));
         case "settings":
           return json({ ok: true, settings: await core.saveSettings(db, body.settings ?? body) });
         case "passcode": {
