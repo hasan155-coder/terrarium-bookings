@@ -94,8 +94,8 @@ export type DepositNote = { pence: number; hours: number };
 export const money = (pence: number) => `£${(pence / 100).toFixed(pence % 100 ? 2 : 0)}`;
 export const depositRule = (hours: number) =>
   hours > 0
-    ? `It comes off your bill on the night. If you cancel at least ${hours} hours before, we refund it in full; later cancellations and no-shows keep the deposit.`
-    : `It comes off your bill on the night.`;
+    ? `The deposit will be deducted from your final bill on the day of your reservation. Cancellations made at least ${hours} hours before your reservation will receive a full refund. Cancellations made within ${hours} hours of your reservation, and non-attendance, will result in the deposit being forfeited.`
+    : `The deposit will be deducted from your final bill on the day of your reservation.`;
 
 export function guestEmail(b: Booked, site = "", cancelUrl = "", deposit?: DepositNote) {
   const rows = [
@@ -417,13 +417,13 @@ export function depositRequestEmail(b: Booked, pence: number, payUrl: string, ho
   const html = shell({
     kicker: "Terrarium Bistro · Deposit", site,
     title: `Secure your table for <i style="color:#c9a66b">${b.guests}.</i>`,
-    intro: `Thank you, ${esc(b.first)}. For groups of your size we ask for a deposit of ${esc(money(pence))} to hold the table. ${esc(depositRule(hours))}`,
+    intro: `Thank you, ${esc(b.first)}. For parties of this size, a deposit of ${esc(money(pence))} is required to secure your reservation. ${esc(depositRule(hours))}`,
     pre: `Deposit of ${money(pence)} for your table for ${b.guests} on ${longDate(b.date)} at ${b.time}.`,
     rows: [row("Date", esc(longDate(b.date))), row("Time", esc(b.time)), row("Guests", String(b.guests)), row("Deposit", esc(money(pence))), row("Reference", esc(b.ref), true)].join(""),
     buttons: [{ href: payUrl, label: `Pay the ${money(pence)} deposit`, solid: true }],
     after: `The payment page is run by Stripe, so we never see your card details. Questions? Call <a href="tel:${PLACE.phoneIntl}" style="color:#ecd49c;text-decoration:none">${PLACE.phone}</a> or reply to this email.`,
   });
-  const text = `Secure your table for ${b.guests} at Terrarium Bistro.\n\nThank you, ${b.first}. For groups of your size we ask for a deposit of ${money(pence)}. ${depositRule(hours)}\n\n${longDate(b.date)} at ${b.time}, ${b.guests} guests, reference ${b.ref}\n\nPay the deposit: ${payUrl}\n\n${PLACE.name}, ${PLACE.phone}`;
+  const text = `Secure your table for ${b.guests} at Terrarium Bistro.\n\nThank you, ${b.first}. For parties of this size, a deposit of ${money(pence)} is required to secure your reservation. ${depositRule(hours)}\n\n${longDate(b.date)} at ${b.time}, ${b.guests} guests, reference ${b.ref}\n\nPay the deposit: ${payUrl}\n\n${PLACE.name}, ${PLACE.phone}`;
   return { subject: `Deposit for your table for ${b.guests} on ${shortDate(b.date)} (${b.ref})`, html, text };
 }
 
@@ -432,7 +432,7 @@ export function depositPaidEmail(b: Booked, pence: number, hours: number, site =
   const html = shell({
     kicker: "Terrarium Bistro · Deposit received", site,
     title: `Thank you, <i style="color:#c9a66b">${esc(b.first)}.</i>`,
-    intro: `We have your ${esc(money(pence))} deposit and your table is secured. ${esc(depositRule(hours))}`,
+    intro: `We have received your deposit of ${esc(money(pence))} and your reservation is secured. ${esc(depositRule(hours))}`,
     pre: `Deposit of ${money(pence)} received for ${longDate(b.date)} at ${b.time}.`,
     rows: [row("Date", esc(longDate(b.date))), row("Time", esc(b.time)), row("Guests", String(b.guests)), row("Deposit paid", esc(money(pence))), row("Reference", esc(b.ref), true)].join(""),
     after: `Need to change anything? Call <a href="tel:${PLACE.phoneIntl}" style="color:#ecd49c;text-decoration:none">${PLACE.phone}</a> or reply to this email.`,

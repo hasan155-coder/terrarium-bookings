@@ -505,7 +505,7 @@ export async function depositRoute(request: Request, env: PayEnv, db: DB): Promi
     return page(env, {
       kicker: "Deposit · " + b.ref,
       title: `Secure your table for <i>${b.guests}.</i>`,
-      body: `<p>For groups of ${s.depositFrom || b.guests} or more we ask for a deposit of £${s.depositPerHead} a person: <b style="color:var(--cream)">${esc(money(d.amount))}</b>. ${esc(depositRule(s.depositHours))}</p>${hold}${details(fresh)}
+      body: `<p>For parties of ${s.depositFrom || b.guests} or more, a deposit of £${s.depositPerHead} per guest is required: <b style="color:var(--cream)">${esc(money(d.amount))}</b>. ${esc(depositRule(s.depositHours))}</p>${hold}${details(fresh)}
 <form method="post" action="/deposit"><input type="hidden" name="r" value="${esc(b.ref)}"><input type="hidden" name="t" value="${esc(t)}">
 <button type="submit" style="background:var(--gold);color:var(--ink);border-color:var(--gold)">Pay ${esc(money(d.amount))} by card</button></form>${PAGE_TAIL}`,
     });
@@ -650,8 +650,8 @@ export async function depositCancelNote(db: DB, b: Booking): Promise<string> {
   const s = await getSettings(db);
   const hours = Math.floor((londonToUtc(b.date, b.time).getTime() - clock.now().getTime()) / 3600_000);
   return hours >= s.depositHours
-    ? `You are cancelling more than ${s.depositHours} hours before, so we will refund your ${money(d.amount)} deposit in full.`
-    : `As this is less than ${s.depositHours} hours before your booking, your ${money(d.amount)} deposit is not refundable.`;
+    ? `As you are cancelling at least ${s.depositHours} hours before your reservation, your deposit of ${money(d.amount)} will be refunded in full.`
+    : `As you are cancelling within ${s.depositHours} hours of your reservation, your deposit of ${money(d.amount)} is non-refundable.`;
 }
 
 /* ---------------------------------------------------------- the hourly run */
