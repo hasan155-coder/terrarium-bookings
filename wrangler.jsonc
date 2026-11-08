@@ -6,7 +6,8 @@
   "observability": { "enabled": true },
   "rules": [{ "type": "Text", "globs": ["**/*.html", "**/*.sql"], "fallthrough": true }],
   "vars": {
-    "PUBLIC_SITE": "https://www.terrariumbistro.co.uk/",
+    // http until GitHub issues the site's HTTPS certificate; once "Enforce HTTPS" is on, http links redirect to https anyway.
+    "PUBLIC_SITE": "http://www.terrariumbistro.co.uk/",
     "BOOKINGS_URL": "https://terrarium-bookings.terrariumbistro.workers.dev",
     "STAFF_URL": "https://terrarium-bookings.terrariumbistro.workers.dev/staff",
     "MAIL_FROM": "Terrarium Bistro <bookings@terrariumbistro.co.uk>",

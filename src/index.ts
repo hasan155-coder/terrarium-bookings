@@ -107,7 +107,7 @@ export default {
             if (text.length > 8000) return cors({ status: 413, body: { ok: false, code: "too_big" } });
             let input = {};
             try { input = JSON.parse(text || "{}"); } catch {}
-            return cors(await pay.voucherCheckout(env, env.DB, input));
+            return cors(await pay.voucherCheckout(env, env.DB, input, request.headers.get("Origin") || request.headers.get("Referer")));
           }
           if (path === "/api/public/voucher" && request.method === "GET") return cors(await pay.voucherLookup(env, env.DB, new URL(request.url).searchParams));
           // Seats held for a deposit that was never paid go back on sale before availability is worked out.
@@ -136,6 +136,16 @@ export default {
       } catch (e) {
         console.error("cancel", e);
         return new Response("Something went wrong. Please call us on 01829 863469.", { status: 500 });
+      }
+    }
+    if (path === "/voucher/done") {
+      if (!env.DB) return Response.redirect(env.PUBLIC_SITE || "https://www.terrariumbistro.co.uk/", 302);
+      try {
+        await ensureSchema(env.DB);
+        return await pay.voucherReturn(request, env, env.DB);
+      } catch (e) {
+        console.error("voucher return", e);
+        return Response.redirect(`${(env.PUBLIC_SITE || "").replace(/#.*$/, "")}#vouchers`, 302);
       }
     }
     if (path === "/deposit" || path === "/deposit/" || path === "/deposit/done") {

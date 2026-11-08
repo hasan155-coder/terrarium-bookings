@@ -119,7 +119,17 @@ function readVoucherInput(input: Row, forStaff: boolean) {
 }
 
 /** Website: start a card payment for a voucher. Returns the Stripe page to send the buyer to. */
-export async function voucherCheckout(env: PayEnv, db: DB, input: Row): Promise<Out> {
+/** Where a buyer goes back to: the website address they came from, if it is one of ours. */
+const OUR_HOSTS = /^(www\.)?terrariumbistro\.co\.uk$|^hasan155-coder\.github\.io$|^localhost$|^127\.0\.0\.1$/;
+export function backTo(env: PayEnv, from: string | null | undefined): string {
+  try {
+    const u = new URL(String(from ?? ""));
+    if ((u.protocol === "https:" || u.protocol === "http:") && OUR_HOSTS.test(u.hostname)) return `${u.origin}${u.pathname}`;
+  } catch {}
+  return site(env);
+}
+
+export async function voucherCheckout(env: PayEnv, db: DB, input: Row, from?: string | null): Promise<Out> {
   if (!stripeOn(env)) return fail(503, "payments_off", `Card payments are not switched on yet. Please call us on ${PHONE} to buy a voucher.`);
   if (str(input._honey, 100)) return fail(400, "rejected", "Sorry, we could not start that payment.");
   const r = readVoucherInput(input, false);
@@ -128,15 +138,16 @@ export async function voucherCheckout(env: PayEnv, db: DB, input: Row): Promise<
   const busy = await db.prepare("SELECT COUNT(*) AS n FROM vouchers WHERE status = 'pending' AND created_at > ?1").bind(since).first<{ n: number }>();
   if ((busy?.n ?? 0) > 40) return fail(429, "busy", `Too many payments are being started just now. Please try again in a few minutes, or call us on ${PHONE}.`);
   const v = await insertVoucher(db, { ...r.v!, status: "pending", source: "online", paid_by: "card online" });
-  const home = site(env);
+  // Stripe sends the buyer back through the booking system (always HTTPS), which then opens the website page they came from.
+  const back = encodeURIComponent(backTo(env, str(input.back, 300) || from));
   try {
     const s = await createCheckout(env, {
       pence: v.amount,
       name: "Terrarium Bistro gift voucher",
       description: `${money(v.amount)} for ${v.to_name}. Valid for 12 months.`,
       email: v.buyer_email,
-      successUrl: `${home}?voucher={CHECKOUT_SESSION_ID}#vouchers`,
-      cancelUrl: `${home}?voucher_cancelled=1#vouchers`,
+      successUrl: `${baseUrl(env)}/voucher/done?s={CHECKOUT_SESSION_ID}&b=${back}`,
+      cancelUrl: `${baseUrl(env)}/voucher/done?cancelled=1&b=${back}`,
       metadata: { kind: "voucher", voucher_id: String(v.id), serial: v.serial },
       paymentDescription: `Gift voucher ${v.serial}`,
       expiresInMin: 60,
@@ -218,6 +229,18 @@ export async function voucherLookup(env: PayEnv, db: DB, q: URLSearchParams): Pr
   const v = await db.prepare("SELECT * FROM vouchers WHERE serial = ?1").bind(serial).first<Voucher>();
   if (!v || v.status === "pending" || v.status === "unpaid") return fail(404, "not_found", "We could not find that voucher.");
   return ok({ voucher: { ...publicVoucher(v), link: await voucherLink(env, db, v.serial) } });
+}
+
+/** /voucher/done: back from Stripe. Settles the payment, then opens the voucher on the website. */
+export async function voucherReturn(request: Request, env: PayEnv, db: DB): Promise<Response> {
+  const q = new URL(request.url).searchParams;
+  const back = backTo(env, q.get("b"));
+  if (q.get("cancelled")) return Response.redirect(`${back}?voucher_cancelled=1#vouchers`, 302);
+  const s = q.get("s") ?? "";
+  if (!/^cs_[A-Za-z0-9_]{10,200}$/.test(s)) return Response.redirect(`${back}#vouchers`, 302);
+  const v = await db.prepare("SELECT * FROM vouchers WHERE stripe_session = ?1").bind(s).first<Voucher>();
+  if (v) await settleVoucher(env, db, v).catch((e) => console.error("voucher return", e));
+  return Response.redirect(`${back}?voucher=${encodeURIComponent(s)}#vouchers`, 302);
 }
 
 /* ---------------------------------------------------------------- staff side */
