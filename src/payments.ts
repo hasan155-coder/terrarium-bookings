@@ -157,8 +157,11 @@ export async function voucherCheckout(env: PayEnv, db: DB, input: Row, from?: st
     return ok({ url: s.url, mode: stripeMode(env) });
   } catch (e) {
     console.error("voucher checkout", e);
+    await db.prepare("INSERT INTO settings (key, value) VALUES ('stripe_last_error', ?1) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+      .bind(JSON.stringify({ at: nowIso(), message: String((e as Error)?.message ?? e).replace(/\b(sk|rk|pk)_(live|test)_[A-Za-z0-9*]+/g, "[key]").slice(0, 400) })).run().catch(() => {});
     await db.prepare("UPDATE vouchers SET status = 'unpaid', updated_at = ?2 WHERE id = ?1").bind(v.id, nowIso()).run();
-    return fail(502, "stripe", `We could not open the card payment just now. Please try again, or call us on ${PHONE}.`);
+    const detail = String((e as Error)?.message ?? e).replace(/\b(sk|rk|pk)_(live|test)_[A-Za-z0-9*]+/g, "[key]").slice(0, 300);
+    return fail(502, "stripe", `We could not open the card payment just now. Please try again, or call us on ${PHONE}.`, { detail });
   }
 }
 

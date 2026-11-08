@@ -132,8 +132,12 @@ export async function handleStaff(request: Request, db: DB | undefined, env: pay
           return out(await extras.staffGuest(db, Number(q.get("id"))));
         case "report":
           return json(await extras.staffReport(db, q.get("from"), q.get("to")));
-        case "keys":
-          return json({ ok: true, keys: keyStatus(env) });
+        case "keys": {
+          const last = await db.prepare("SELECT value FROM settings WHERE key = 'stripe_last_error'").first<{ value: string }>().catch(() => null);
+          let lastError = null;
+          try { lastError = last ? JSON.parse(last.value) : null; } catch {}
+          return json({ ok: true, keys: keyStatus(env), lastError });
+        }
         case "vouchers":
           return json(await pay.staffVouchers(env, db, q));
         case "voucher":

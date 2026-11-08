@@ -17,6 +17,8 @@ export type Session = {
 };
 
 export const stripeOn = (env: StripeEnv) => !!env.STRIPE_SECRET_KEY;
+/** The most recent error Stripe returned (keys masked), shown to staff on the tablet so problems can be fixed. */
+export let lastStripeError: { at: string; status: number; message: string } | null = null;
 /** "test" while the key is a test key, so staff can see that no real money moves. */
 export const stripeMode = (env: StripeEnv) => (!env.STRIPE_SECRET_KEY ? "off" : /^(sk|rk)_test_/.test(env.STRIPE_SECRET_KEY) ? "test" : "live");
 
@@ -51,8 +53,10 @@ async function call<T>(env: StripeEnv, method: "GET" | "POST", path: string, bod
     });
     const data = (await res.json().catch(() => ({}))) as T & { error?: { message?: string } };
     if (!res.ok) {
-      console.error("stripe", res.status, data?.error?.message ?? "");
-      throw new Error(`stripe_${res.status}`);
+      const msg = String(data?.error?.message ?? "").replace(/\b(sk|rk|pk)_(live|test)_[A-Za-z0-9*]+/g, "[key]");
+      console.error("stripe", res.status, msg);
+      lastStripeError = { at: new Date().toISOString(), status: res.status, message: msg.slice(0, 400) };
+      throw new Error(`stripe_${res.status}: ${msg}`);
     }
     return data;
   } finally {

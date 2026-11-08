@@ -1173,7 +1173,10 @@ async function openSettings() {
       <dt>Emails</dt><dd>${em.set ? `<b style="color:var(--sage-hi)">On</b> · key ending ${esc(em.ends)} · ${where(em.source)}` : '<b style="color:#e6a093">Off.</b> Guests get no confirmation emails until the Resend key is pasted below.'}</dd>`;
     $('#kOff', sh).hidden = !(st.set && st.source === 'tablet');
   };
-  api('keys').then(r => { if (r && r.ok && sh.isConnected) keyLine(r.keys); }).catch(() => {});
+  api('keys').then(r => {
+    if (!r || !r.ok || !sh.isConnected) return; keyLine(r.keys);
+    if (r.lastError) $('#kStat', sh).insertAdjacentHTML('beforeend', `<dt>Last Stripe error</dt><dd style="color:#e6a093">${esc(r.lastError.message)} <span class="hint">(${esc(new Date(r.lastError.at).toLocaleString('en-GB', { timeZone: 'Europe/London', dateStyle: 'short', timeStyle: 'short' }))})</span></dd>`);
+  }).catch(() => {});
   const saveKeys = async body => {
     const err = $('#kErr', sh); err.textContent = '';
     if (!$('#kPass', sh).value) { err.textContent = 'Enter the staff passcode to confirm.'; $('#kPass', sh).focus(); return; }
