@@ -11,7 +11,7 @@
     "BOOKINGS_URL": "https://terrarium-bookings.terrariumbistro.workers.dev",
     "STAFF_URL": "https://terrarium-bookings.terrariumbistro.workers.dev/staff",
     "MAIL_FROM": "Terrarium Bistro <bookings@terrariumbistro.co.uk>",
-    "RESTAURANT_EMAIL": "info@terrariumbistro.co.uk"
+    "RESTAURANT_EMAIL": "terrariumbistro@gmail.com"
   },
   // RESEND_API_KEY is a secret, added in the Cloudflare dashboard (never stored here).
   // Every hour, on the hour (UTC). The reminder run itself waits until 10:00 UK time.

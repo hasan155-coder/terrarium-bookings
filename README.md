@@ -23,7 +23,7 @@ Settings such as covers per time slot, seats, table time, tables and closed days
 
 ## Secrets (never stored in this repository)
 
-Either add them in the Cloudflare dashboard, or paste them on the tablet under Settings, then Payment and email keys (needs the staff passcode; info@ is emailed on every change). A key set in Cloudflare always wins.
+Either add them in the Cloudflare dashboard, or paste them on the tablet under Settings, then Payment and email keys (needs the staff passcode; terrariumbistro@gmail.com is emailed on every change). A key set in Cloudflare always wins.
 
 - `RESEND_API_KEY`: sends the emails.
 - `STRIPE_SECRET_KEY`: switches card payments on. A test key (`sk_test_...`) keeps the website's payment buttons hidden from guests: open the site with `?testpay=1` to try it with Stripe's test card. Swap in the live key (`sk_live_...`) to take real payments.
