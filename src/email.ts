@@ -33,6 +33,14 @@ const PLACE = {
   maps: "https://www.google.com/maps/search/?api=1&query=Terrarium%20Bistro%2C%2044%20High%20St%2C%20Tarporley%20CW6%200DX",
 };
 
+/** Legal footer: privacy policy link and the company behind the trading name (Companies Act / UK GDPR). */
+export const COMPANY_LINE = "Terrarium Bistro is a trading name of Terrarium Bistro Bar Tarporley Ltd, registered in England and Wales, company no. 17361165.";
+export function privacyUrl(site = "") {
+  try { return new URL("privacy.html", site || "http://www.terrariumbistro.co.uk/").toString(); } catch { return "http://www.terrariumbistro.co.uk/privacy.html"; }
+}
+const legalHtml = (site = "") =>
+  ` &middot; <a href="${privacyUrl(site).replace(/"/g, "&quot;")}" style="color:#8e8573">Privacy</a><br>${COMPANY_LINE}`;
+
 const esc = (v: unknown) =>
   String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string);
 const clip = (v: unknown, n: number) => String(v ?? "").replace(/[\r\n]+/g, " ").trim().slice(0, n);
@@ -128,7 +136,7 @@ export function guestEmail(b: Booked, site = "", cancelUrl = "", deposit?: Depos
 ${deposit ? `<p style="margin:0 0 14px;font:14px/1.6 ${SANS};color:#c8bea9">Thank you for your ${esc(money(deposit.pence))} deposit. ${esc(depositRule(deposit.hours))}</p>` : ""}<p style="margin:0;padding-top:20px;border-top:1px solid #35312a;font:14px/1.6 ${SANS};color:#c8bea9">Need to change or cancel? Call us on <a href="tel:${PLACE.phoneIntl}" style="color:#ecd49c;text-decoration:none">${PLACE.phone}</a> or simply reply to this email.${cancelUrl ? ` Can't make it at all? <a href="${esc(cancelUrl)}" style="color:#ecd49c">Cancel your table online</a>.` : ""}</p>
 </td></tr>
 </table>
-<p style="margin:22px 0 0;font:12px/1.7 ${SANS};color:#8e8573">${PLACE.name} &middot; ${PLACE.address} &middot; <a href="tel:${PLACE.phoneIntl}" style="color:#8e8573">${PLACE.phone}</a>${site ? ` &middot; <a href="${esc(site)}" style="color:#8e8573">Website</a>` : ""}</p>
+<p style="margin:22px 0 0;font:12px/1.7 ${SANS};color:#8e8573">${PLACE.name} &middot; ${PLACE.address} &middot; <a href="tel:${PLACE.phoneIntl}" style="color:#8e8573">${PLACE.phone}</a>${site ? ` &middot; <a href="${esc(site)}" style="color:#8e8573">Website</a>` : ""}${legalHtml(site)}</p>
 </td></tr></table></body></html>`;
   const text = [
     `Your table at Terrarium Bistro is confirmed.`, ``,
@@ -143,6 +151,7 @@ ${deposit ? `<p style="margin:0 0 14px;font:14px/1.6 ${SANS};color:#c8bea9">Than
     `Need to change or cancel? Call ${PLACE.phone} or reply to this email.`,
     ...(cancelUrl ? [`Can't make it? Cancel online: ${cancelUrl}`] : []),
     `${PLACE.name}, ${PLACE.address}`,
+    `Privacy policy: ${privacyUrl(site)}`,
   ].join("\n");
   return { subject: `Your table is confirmed: ${shortDate(b.date)} at ${b.time}`, html, text };
 }
@@ -173,7 +182,7 @@ ${cancelUrl ? `<a href="${esc(cancelUrl)}" style="display:inline-block;margin:0 
 <p style="margin:0;padding-top:20px;border-top:1px solid #35312a;font:14px/1.6 ${SANS};color:#c8bea9">Running late or need a different time? Call us on <a href="tel:${PLACE.phoneIntl}" style="color:#ecd49c;text-decoration:none">${PLACE.phone}</a> and we will do our best to help. Cancelling frees your table for another guest, so we are grateful when you let us know.</p>
 </td></tr>
 </table>
-<p style="margin:22px 0 0;font:12px/1.7 ${SANS};color:#8e8573">${PLACE.name} &middot; ${PLACE.address} &middot; <a href="tel:${PLACE.phoneIntl}" style="color:#8e8573">${PLACE.phone}</a>${site ? ` &middot; <a href="${esc(site)}" style="color:#8e8573">Website</a>` : ""}</p>
+<p style="margin:22px 0 0;font:12px/1.7 ${SANS};color:#8e8573">${PLACE.name} &middot; ${PLACE.address} &middot; <a href="tel:${PLACE.phoneIntl}" style="color:#8e8573">${PLACE.phone}</a>${site ? ` &middot; <a href="${esc(site)}" style="color:#8e8573">Website</a>` : ""}${legalHtml(site)}</p>
 </td></tr></table></body></html>`;
   const text = [
     `See you tomorrow at Terrarium Bistro.`, ``,
@@ -183,6 +192,7 @@ ${cancelUrl ? `<a href="${esc(cancelUrl)}" style="display:inline-block;margin:0 
     ...(cancelUrl ? [`Can't make it? Cancel here: ${cancelUrl}`] : []),
     `Running late or need a different time? Call ${PLACE.phone}.`,
     `${PLACE.name}, ${PLACE.address}`,
+    `Privacy policy: ${privacyUrl(site)}`,
   ].join("\n");
   return { subject: `See you tomorrow at ${b.time}: your table at Terrarium Bistro`, html, text };
 }
@@ -317,7 +327,7 @@ ${o.rows ? `<table role="presentation" width="100%" cellpadding="0" cellspacing=
 ${btns ? `<tr><td style="padding:22px 36px 6px">${btns}</td></tr>` : ""}
 <tr><td style="padding:16px 36px 34px">${o.after ? `<p style="margin:0;padding-top:20px;border-top:1px solid #35312a;font:14px/1.6 ${SANS};color:#c8bea9">${o.after}</p>` : ""}</td></tr>
 </table>
-<p style="margin:22px 0 0;font:12px/1.7 ${SANS};color:#8e8573">${PLACE.name} &middot; ${PLACE.address} &middot; <a href="tel:${PLACE.phoneIntl}" style="color:#8e8573">${PLACE.phone}</a>${o.site ? ` &middot; <a href="${esc(o.site)}" style="color:#8e8573">Website</a>` : ""}</p>
+<p style="margin:22px 0 0;font:12px/1.7 ${SANS};color:#8e8573">${PLACE.name} &middot; ${PLACE.address} &middot; <a href="tel:${PLACE.phoneIntl}" style="color:#8e8573">${PLACE.phone}</a>${o.site ? ` &middot; <a href="${esc(o.site)}" style="color:#8e8573">Website</a>` : ""}${legalHtml(o.site)}</p>
 </td></tr></table></body></html>`;
 }
 
@@ -360,6 +370,7 @@ export function voucherEmail(v: VoucherMail, viewUrl: string, site = "", toBuyer
     `View and print: ${viewUrl}`, ...(book ? [`Book a table: ${book}`] : []), ``,
     `Quote the voucher number when you book or pay. It cannot be exchanged for cash.`,
     `${PLACE.name}, ${PLACE.address}, ${PLACE.phone}`,
+    `Privacy policy: ${privacyUrl(site)}`,
   ].join("\n");
   const subject = toBuyer ? `Your Terrarium Bistro gift voucher for ${v.to_name} (${money(v.amount)})` : `A gift from ${v.from_name || "a friend"}: an evening at Terrarium Bistro`;
   return { subject, html, text };

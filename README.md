@@ -27,3 +27,18 @@ Either add them in the Cloudflare dashboard, or paste them on the tablet under S
 
 - `RESEND_API_KEY`: sends the emails.
 - `STRIPE_SECRET_KEY`: switches card payments on. A test key (`sk_test_...`) keeps the website's payment buttons hidden from guests: open the site with `?testpay=1` to try it with Stripe's test card. Swap in the live key (`sk_live_...`) to take real payments.
+
+## Privacy clean-up
+
+`src/retention.ts` runs once a day (03:00 UTC, from the hourly cron) and keeps the booking system in line with the privacy policy at www.terrariumbistro.co.uk/privacy.html:
+
+| Data | Kept for |
+| --- | --- |
+| Booking names, contact details, requests and notes | 2 years after the booking date (date, time, party size and status stay) |
+| Guest notes | Until the guest has had no booking for 2 years |
+| Waiting list | 30 days |
+| Scrambled IP stored with a booking | 30 days |
+| Reminder log | 2 years |
+| Voucher names, emails, messages and notes | 6 years after purchase (amounts stay for tax records) |
+
+If any of these periods change, change the privacy policy too. Guest emails and pages link to the privacy policy and name the company (Terrarium Bistro Bar Tarporley Ltd, no. 17361165).

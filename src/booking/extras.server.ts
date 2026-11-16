@@ -18,7 +18,7 @@ export function normPhone(v: unknown): string {
 }
 const PHONE_SQL = "replace(replace(replace(replace(replace(replace(phone, ' ', ''), '-', ''), '(', ''), ')', ''), '+44', '0'), '.', '')";
 const normEmail = (v: unknown) => String(v ?? "").trim().toLowerCase();
-const keysOf = (b: { email?: string; phone?: string }) =>
+export const keysOf = (b: { email?: string; phone?: string }) =>
   [b.email && normEmail(b.email) ? "e:" + normEmail(b.email) : "", normPhone(b.phone) ? "p:" + normPhone(b.phone) : ""].filter(Boolean);
 
 /* --------------------------------------------------------- guest history */

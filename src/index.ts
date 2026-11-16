@@ -16,6 +16,7 @@ import { cancelRoute, cancelUrl, sendReminders } from "./guest.ts";
 import * as pay from "./payments.ts";
 import { stripeMode, stripeOn } from "./stripe.ts";
 import { withKeys } from "./keys.ts";
+import { tidyDue, tidyPersonalData } from "./retention.ts";
 
 interface D1 extends DB {
   batch(statements: Stmt[]): Promise<unknown>;
@@ -162,7 +163,7 @@ export default {
     return new Response("Not found", { status: 404 });
   },
 
-  // Hourly (see "triggers" in wrangler.jsonc): reminders, payment checks and scheduled vouchers.
+  // Hourly (see "triggers" in wrangler.jsonc): reminders, payment checks, scheduled vouchers, and the daily privacy clean-up.
   async scheduled(_event: unknown, raw: Env, ctx: Ctx): Promise<void> {
     if (!raw.DB) return;
     const env = await withKeys(raw, raw.DB);
@@ -173,6 +174,7 @@ export default {
         if (r.sent || r.failed) console.log("reminders", JSON.stringify(r));
         const p = await pay.paymentsHourly(env, env.DB);
         if (p.vouchersPaid || p.depositsPaid || p.released || p.vouchersSent) console.log("payments", JSON.stringify(p));
+        if (tidyDue()) console.log("privacy clean-up", JSON.stringify(await tidyPersonalData(env.DB)));
       })().catch((e) => console.error("hourly", e)),
     );
   },

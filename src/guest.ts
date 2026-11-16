@@ -6,7 +6,7 @@ import {
   type Booking, type DB,
   PUBLIC_COLS, addDays, getSettings, londonNow, stamp,
 } from "./booking/core.server.ts";
-import { londonToUtc, longDate, reminderEmail, restaurantCancelledEmail, sendEmail, type Booked, type MailEnv } from "./email.ts";
+import { COMPANY_LINE, londonToUtc, longDate, privacyUrl, reminderEmail, restaurantCancelledEmail, sendEmail, type Booked, type MailEnv } from "./email.ts";
 import { depositCancelLine, depositCancelNote } from "./payments.ts";
 
 export type GuestEnv = MailEnv & { BOOKINGS_URL?: string };
@@ -106,7 +106,7 @@ a{color:var(--gold-hi)}
 <p class="k">${esc(o.kicker)}</p>
 <h1>${o.title}</h1>
 ${o.body}
-<p class="small">Terrarium Bistro · 44 High St, Tarporley CW6 0DX · <a href="tel:${PHONE_INTL}">${PHONE}</a>${site ? ` · <a href="${esc(site)}">Website</a>` : ""}</p>
+<p class="small">Terrarium Bistro · 44 High St, Tarporley CW6 0DX · <a href="tel:${PHONE_INTL}">${PHONE}</a>${site ? ` · <a href="${esc(site)}">Website</a>` : ""} · <a href="${esc(privacyUrl(site))}">Privacy</a><br>${COMPANY_LINE}</p>
 </main></body></html>`;
   return new Response(html, { status: o.status ?? 200, headers: PAGE_HEADERS });
 }
