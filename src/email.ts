@@ -36,7 +36,7 @@ const PLACE = {
 /** Legal footer: privacy policy link and the company behind the trading name (Companies Act / UK GDPR). */
 export const COMPANY_LINE = "Terrarium Bistro is a trading name of Terrarium Bistro Bar Tarporley Ltd, registered in England and Wales, company no. 17361165.";
 export function privacyUrl(site = "") {
-  try { return new URL("privacy.html", site || "http://www.terrariumbistro.co.uk/").toString(); } catch { return "http://www.terrariumbistro.co.uk/privacy.html"; }
+  try { return new URL("privacy.html", site || "https://www.terrariumbistro.co.uk/").toString(); } catch { return "https://www.terrariumbistro.co.uk/privacy.html"; }
 }
 const legalHtml = (site = "") =>
   ` &middot; <a href="${privacyUrl(site).replace(/"/g, "&quot;")}" style="color:#8e8573">Privacy</a><br>${COMPANY_LINE}`;
